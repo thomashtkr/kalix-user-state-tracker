@@ -1,0 +1,6 @@
+name: user-state-tracker
+service:
+  image: docker.io/thomashtkr/kalix-user-state-tracker:0.0.1-3
+  env:
+    - name: SOME_VARIABLE
+      value: some value

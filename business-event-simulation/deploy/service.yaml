@@ -1,0 +1,6 @@
+name: event-simulation
+service:
+  image: docker.io/thomashtkr/kalix-event-simulation:0.0.1-1
+  env:
+    - name: SOME_VARIABLE
+      value: some value
