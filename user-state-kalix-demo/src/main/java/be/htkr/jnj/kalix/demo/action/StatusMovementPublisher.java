@@ -1,7 +1,7 @@
 package be.htkr.jnj.kalix.demo.action;
 
-import be.htkr.jnj.kalix.demo.entity.user.UserStateEntity;
 import be.htkr.jnj.kalix.demo.entity.user.UserEntityStatusMovementEvent;
+import be.htkr.jnj.kalix.demo.entity.user.UserStateEntity;
 import be.htkr.jnj.kalix.demo.events.UserStatusMovement;
 import kalix.javasdk.action.Action;
 import kalix.javasdk.annotations.Publish;

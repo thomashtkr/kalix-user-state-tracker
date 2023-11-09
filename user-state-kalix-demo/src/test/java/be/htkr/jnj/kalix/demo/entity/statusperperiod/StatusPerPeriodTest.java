@@ -1,19 +1,9 @@
 package be.htkr.jnj.kalix.demo.entity.statusperperiod;
 
-import be.htkr.jnj.kalix.demo.DemoConfig;
-import be.htkr.jnj.kalix.demo.entity.user.UserState;
 import kalix.javasdk.testkit.ValueEntityTestKit;
 import org.junit.jupiter.api.Test;
 
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.temporal.ChronoField;
-import java.time.temporal.Temporal;
-import java.util.HashMap;
-import java.util.Map;
-
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.InstanceOfAssertFactories.PERIOD;
 
 public class StatusPerPeriodTest {
 

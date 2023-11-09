@@ -1,10 +1,11 @@
 package be.htkr.jnj.kalix.demo.event.simulation.entities.user;
 
 import kalix.javasdk.testkit.EventSourcedTestKit;
-import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 
 public class UserEntityTest {

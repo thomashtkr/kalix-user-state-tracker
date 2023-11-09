@@ -9,7 +9,6 @@ import kalix.javasdk.annotations.Table;
 import kalix.javasdk.annotations.ViewId;
 import kalix.javasdk.view.View;
 import org.springframework.web.bind.annotation.GetMapping;
-import reactor.core.publisher.Flux;
 
 import java.util.List;
 import java.util.Map;

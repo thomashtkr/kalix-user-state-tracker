@@ -2,7 +2,6 @@ package org.example;
 
 import be.htkr.jnj.kalix.demo.event.simulation.Main;
 import kalix.spring.testkit.KalixIntegrationTestKitSupport;
-
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

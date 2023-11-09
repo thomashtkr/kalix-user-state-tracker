@@ -1,8 +1,5 @@
 package be.htkr.jnj.kalix.demo.entity.user;
 
-import be.htkr.jnj.kalix.demo.entity.user.UpdateUserStateCommand;
-import be.htkr.jnj.kalix.demo.entity.user.UserState;
-import be.htkr.jnj.kalix.demo.entity.user.UserStateEntity;
 import be.htkr.jnj.kalix.demo.events.UserBusinessEvent;
 import be.htkr.jnj.kalix.demo.events.model.User;
 import kalix.javasdk.testkit.EventSourcedTestKit;
