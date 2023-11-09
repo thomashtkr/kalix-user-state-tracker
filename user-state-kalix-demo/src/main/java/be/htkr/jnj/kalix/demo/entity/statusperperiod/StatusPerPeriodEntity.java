@@ -19,16 +19,13 @@ public class StatusPerPeriodEntity extends ValueEntity<StatusPerPeriod> {
 
     private final Logger logger = LoggerFactory.getLogger(StatusPerPeriodEntity.class);
 
-
-
     @Override
     public StatusPerPeriod emptyState() { return new StatusPerPeriod(null, null, new HashMap<>()); }
 
 
     @PostMapping("/{periodName}/{periodId}/register-movement")
     public Effect<String> registerMovement(@PathVariable("periodName") String periodName, @PathVariable("periodId") String periodId, @RequestBody RegisterStatusMovementCommand command) {
-        logger.info("registering movement for {}", commandContext().entityId());
-        logger.info("periodName {} periodId {}", periodName, periodId);
+        logger.info("movement for periodName {} periodId {}", periodName, periodId);
         StatusPerPeriod state = currentState();
         if(state.periodName() == null) {
             state = state.setGroupData(periodName, periodId);
