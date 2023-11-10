@@ -29,6 +29,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.UUID;
 
+import static be.htkr.jnj.kalix.demo.view.PeriodGroupingName.PER_MONTH;
+import static be.htkr.jnj.kalix.demo.view.PeriodGroupingName.PER_QUARTER;
 import static be.htkr.jnj.kalix.demo.view.PeriodGroupingName.PER_YEAR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.MAP;
@@ -85,15 +87,18 @@ public class ConsumeIntegrationTest extends KalixIntegrationTestKitSupport {
         Instant now = Instant.now();
         String currentYear = PeriodGroupingName.timeStampToPeriodId(now, PER_YEAR);
 
+        StatusPerPeriodViewData perYearResponse = getViewDataFor(PER_YEAR, currentYear);
+        verifyPerPeriod(perYearResponse, PER_YEAR, currentYear);
+
+        String currentMonth = PeriodGroupingName.timeStampToPeriodId(now, PER_MONTH);
+        StatusPerPeriodViewData perMonthResponse = getViewDataFor(PER_MONTH, currentMonth);
+        verifyPerPeriod(perMonthResponse, PER_MONTH, currentMonth);
+
+        String currentQuarter = PeriodGroupingName.timeStampToPeriodId(now, PER_QUARTER);
+        StatusPerPeriodViewData perQuarterResponse = getViewDataFor(PER_QUARTER, currentQuarter);
+        verifyPerPeriod(perQuarterResponse, PER_QUARTER, currentQuarter);
 
 
-        StatusPerPeriodViewData response = webClient.get().uri("/view/counters/{periodName}/{periodId}", Map.of("periodName", PER_YEAR.value, "periodId", currentYear))
-                .retrieve().bodyToMono(StatusPerPeriodViewData.class).block();
-        assertThat(response.periodName()).isEqualTo(PER_YEAR.value);
-        assertThat(response.periodId()).isEqualTo(currentYear);
-        assertThat(response.counters()).hasSize(2);
-        assertThat(response.counters().stream().filter(c -> c.status().equals("REGISTERED")).count()).isEqualTo(1);
-        assertThat(response.counters().stream().filter(c -> c.status().equals("PROFILE_COMPLETE")).count()).isEqualTo(1);
 
 /*
         StatusPerPeriodViewData resultPerYear = componentClient.forView()
@@ -110,5 +115,18 @@ public class ConsumeIntegrationTest extends KalixIntegrationTestKitSupport {
                 .toCompletableFuture().get();
 
  */
+    }
+
+    private void verifyPerPeriod(StatusPerPeriodViewData perYearResponse, PeriodGroupingName periodName, String periodId) {
+        assertThat(perYearResponse.periodName()).isEqualTo(periodName.value);
+        assertThat(perYearResponse.periodId()).isEqualTo(periodId);
+        assertThat(perYearResponse.counters()).hasSize(2);
+        assertThat(perYearResponse.counters().stream().filter(c -> c.status().equals("REGISTERED")).count()).isEqualTo(1);
+        assertThat(perYearResponse.counters().stream().filter(c -> c.status().equals("PROFILE_COMPLETE")).count()).isEqualTo(1);
+    }
+
+    private StatusPerPeriodViewData getViewDataFor(PeriodGroupingName periodName, String periodId) {
+        return webClient.get().uri("/view/counters/{periodName}/{periodId}", Map.of("periodName", periodName.value, "periodId", periodId))
+                .retrieve().bodyToMono(StatusPerPeriodViewData.class).block();
     }
 }
