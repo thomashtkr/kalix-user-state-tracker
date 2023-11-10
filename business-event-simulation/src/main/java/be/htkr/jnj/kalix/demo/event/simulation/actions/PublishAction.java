@@ -12,6 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 
 
 @Subscribe.EventSourcedEntity(value = UserEntity.class)
@@ -31,7 +33,9 @@ public class PublishAction extends Action {
     public Effect<UserBusinessEvent> publishUserProfileCompletedEvent(UserEvent.ProfileCompleted internalEvent) {
         logger.info("publishing {}", internalEvent);
         return effects()
-                .reply(new UserBusinessEvent.UserProfileCompleted(internalEvent.userId(), new UserDetails(internalEvent.favoriteColor(), internalEvent.country(), internalEvent.gender()), internalEvent.timestamp()));
+                .reply(new UserBusinessEvent.UserProfileCompleted(internalEvent.userId(),
+                        new UserDetails(internalEvent.favoriteColor(), internalEvent.country(), internalEvent.gender(), internalEvent.birthDate()),
+                        internalEvent.timestamp()));
     }
 
     @Publish.Topic("user-events")

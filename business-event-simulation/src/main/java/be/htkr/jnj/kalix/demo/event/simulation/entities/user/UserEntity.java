@@ -42,7 +42,7 @@ public class UserEntity extends EventSourcedEntity<UserState, UserEvent> {
 
     @PostMapping("/profile")
     public Effect<String> storeProfile(@RequestBody UserCommand.StoreUserProfile command) {
-        return effects().emitEvent(new UserEvent.ProfileCompleted(commandContext().entityId(), command.favoriteColor(), command.country(), command.gender(), Instant.now()))
+        return effects().emitEvent(new UserEvent.ProfileCompleted(commandContext().entityId(), command.favoriteColor(), command.country(), command.gender(), Instant.now(), command.birthdate()))
                 .thenReply(state -> "OK");
     }
 

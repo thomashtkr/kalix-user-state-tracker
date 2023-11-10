@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
@@ -55,9 +57,10 @@ public class SimulationAction extends Action {
     }
 
     private DeferredCall<Any, String> storeProfile(String userId) {
+        Instant birthDate = Instant.now().minus(30, ChronoUnit.DAYS);
         return componentClient.forEventSourcedEntity(userId)
                 .call(UserEntity::storeProfile)
-                .params(new UserCommand.StoreUserProfile(userId+"_email", userId+"_color", userId+"_country", userId+"_gender"));
+                .params(new UserCommand.StoreUserProfile(userId+"_email", userId+"_color", userId+"_country", userId+"_gender", birthDate));
     }
 
     private DeferredCall<Any, String> confirmGdpr(String userId) {
