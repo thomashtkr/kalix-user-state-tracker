@@ -24,7 +24,7 @@ public class UserStateEntity extends EventSourcedEntity<UserState, UserEntitySta
 
     @Override
     public UserState emptyState(){
-        return new UserState(null, null, null, new UserDemographic(null, null, null));
+        return new UserState(null, null, null, new UserDemographic(null, null, null, null));
     }
 
     @PostMapping("/update")
@@ -59,7 +59,7 @@ public class UserStateEntity extends EventSourcedEntity<UserState, UserEntitySta
         if(event.movement() > 0) {
             var newState =  currentState().updateStatus(event.status(), event.timestamp());
             if(event.demographic() != null){
-                return newState.updateDemographic(event.demographic().favoriteColor(), event.demographic().country(), event.demographic().gender());
+                return newState.updateDemographic(event.demographic().favoriteColor(), event.demographic().country(), event.demographic().gender(), event.demographic().birthDate());
             } else {
                 return newState;
             }

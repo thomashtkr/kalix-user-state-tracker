@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 
 @Id("userId")
 @TypeId("user")
@@ -22,7 +24,7 @@ public class UserEntity extends EventSourcedEntity<UserState, UserEvent> {
 
     @Override
     public UserState emptyState(){
-        return new UserState(null,  null, null, null, null);
+        return new UserState(null,  null, null, null, null, null);
     }
 
     @PostMapping("/register")
@@ -49,7 +51,7 @@ public class UserEntity extends EventSourcedEntity<UserState, UserEvent> {
     @EventHandler
     public UserState on(UserEvent.ProfileCompleted event) {
         logger.info("profile completed for {}", eventContext().entityId());
-        return currentState().completeProfile(event.favoriteColor());
+        return currentState().completeProfile(event.favoriteColor(), event.birthDate());
     }
 
     @PostMapping("/gdpr")

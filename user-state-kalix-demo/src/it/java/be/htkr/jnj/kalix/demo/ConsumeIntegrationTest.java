@@ -25,6 +25,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.UUID;
@@ -35,7 +36,7 @@ import static be.htkr.jnj.kalix.demo.view.PeriodGroupingName.PER_YEAR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.MAP;
 
-@SpringBootTest(classes = Main.class, properties = "{ACL_ENABLED=false}")
+@SpringBootTest(classes = Main.class)
 @ExtendWith(MockitoExtension.class)
 @Import(TestTopicConfig.class)
 public class ConsumeIntegrationTest extends KalixIntegrationTestKitSupport {
@@ -64,11 +65,11 @@ public class ConsumeIntegrationTest extends KalixIntegrationTestKitSupport {
     public void verifyCounterEventSourcedPublishToTopicAndProjectedInView() throws Exception {
         var topicId = "user-events";
         var userId = UUID.randomUUID().toString();
-        var birthDate = Instant.now();
+        var birthDate = LocalDate.now();
         var registeredUser = new UserBusinessEvent.UserRegistered(userId, new User(userId, "name", "email"), Instant.now());
         eventsTopic.publish(registeredUser, topicId);
         eventsTopic.publish(new UserBusinessEvent.UserProfileCompleted(userId, new UserDetails("blue", "BE", "M", birthDate), Instant.now()), topicId);
-        Thread.sleep(5000L); //the duration in the next expectOnTyped is not respected
+        Thread.sleep(5000L); //the duration in the next expectOneTyped is not respected
         UserStatusMovement reg = movementsStream.expectOneTyped(UserStatusMovement.class, Duration.of(5, ChronoUnit.SECONDS)).getPayload();
         assertThat(reg.movement()).isEqualTo(1);
         assertThat(reg.status()).isEqualTo(UserState.Status.REGISTERED.name());

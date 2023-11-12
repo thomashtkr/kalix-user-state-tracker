@@ -3,6 +3,8 @@ package be.htkr.jnj.kalix.demo.event.simulation.entities.user;
 import kalix.javasdk.annotations.TypeName;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.UUID;
 
 public sealed interface UserEvent {
@@ -10,7 +12,7 @@ public sealed interface UserEvent {
     @TypeName("user-registered")
     record UserRegistered(String userId, String name) implements UserEvent {}
     @TypeName("user-profile-completed")
-    record ProfileCompleted(String userId, String favoriteColor, String country, String gender, Instant timestamp, Instant birthDate) implements UserEvent {}
+    record ProfileCompleted(String userId, String favoriteColor, String country, String gender, Instant timestamp, LocalDate birthDate) implements UserEvent {}
 
     @TypeName("user-gdpr-confirmed")
     record GdprConfirmed(String userid, UUID termsAndCondition, Instant timestamp) implements UserEvent {}
