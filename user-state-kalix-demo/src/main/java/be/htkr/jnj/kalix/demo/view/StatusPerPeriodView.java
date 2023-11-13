@@ -1,7 +1,7 @@
 package be.htkr.jnj.kalix.demo.view;
 
-import be.htkr.jnj.kalix.demo.entity.statusperperiod.StatusPerPeriod;
-import be.htkr.jnj.kalix.demo.entity.statusperperiod.StatusPerPeriodEntity;
+import be.htkr.jnj.kalix.demo.entity.singlelevel.SingleLevelGroupedCounters;
+import be.htkr.jnj.kalix.demo.entity.singlelevel.SingleLevelGroupingEntity;
 import be.htkr.jnj.kalix.demo.entity.user.UserState;
 import kalix.javasdk.annotations.Query;
 import kalix.javasdk.annotations.Subscribe;
@@ -10,19 +10,20 @@ import kalix.javasdk.annotations.ViewId;
 import kalix.javasdk.view.View;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import reactor.core.publisher.Flux;
 
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@ViewId("view_status_per_period")
-@Table("status_per_period")
-public class StatusPerPeriodView extends View<StatusPerPeriodViewData> {
+@ViewId("view_single_level_grouped")
+@Table("single_level_grouped")
+public class StatusPerPeriodView extends View<SingleLevelGroupedViewData> {
 
-    @Subscribe.ValueEntity(StatusPerPeriodEntity.class)
-    public UpdateEffect<StatusPerPeriodViewData> onChange(StatusPerPeriod perPeriod) {
+    @Subscribe.ValueEntity(SingleLevelGroupingEntity.class)
+    public UpdateEffect<SingleLevelGroupedViewData> onChange(SingleLevelGroupedCounters groupedCounters) {
         return effects()
-                .updateState(new StatusPerPeriodViewData(perPeriod.periodName(), perPeriod.periodId(), fromCounterMap(perPeriod.counters()) ));
+                .updateState(new SingleLevelGroupedViewData(groupedCounters.groupName(), groupedCounters.groupId(), fromCounterMap(groupedCounters.counters()) ));
     }
 
     private List<StatusCounter> fromCounterMap(Map<UserState.Status, Integer> counters) {
@@ -31,9 +32,9 @@ public class StatusPerPeriodView extends View<StatusPerPeriodViewData> {
 
 
 
-    @GetMapping("/view/counters/{periodName}/{periodId}")
-    @Query("SELECT * FROM status_per_period WHERE periodName = :periodName and periodId = :periodId" )
-    public StatusPerPeriodViewData getStatusPerPeriod(@PathVariable("periodName") String periodName, @PathVariable("periodId") String periodId) {
+    @GetMapping("/view/counters/{groupName}")
+    @Query("SELECT * FROM single_level_grouped WHERE groupName = :groupName" )
+    public Flux<SingleLevelGroupedViewData> getStatusPerPeriod(@PathVariable("groupName") String groupName) {
         return null;
     }
 

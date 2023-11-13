@@ -30,7 +30,6 @@ public class IntegrationTest extends KalixIntegrationTestKitSupport {
   public void testSimulateUser() throws Exception {
     int numberOfUsers = 5;
     var createdIds = webClient.post().uri("/api/simulate/users/" + numberOfUsers).retrieve().bodyToMono(List.class).block();
-    createdIds.forEach(id -> System.out.println("created " + id));
     Assertions.assertThat(createdIds).hasSize(numberOfUsers);
 
     createdIds.forEach(id -> {

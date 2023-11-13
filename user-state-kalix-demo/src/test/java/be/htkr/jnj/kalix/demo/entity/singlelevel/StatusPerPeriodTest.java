@@ -1,4 +1,4 @@
-package be.htkr.jnj.kalix.demo.entity.statusperperiod;
+package be.htkr.jnj.kalix.demo.entity.singlelevel;
 
 import kalix.javasdk.testkit.ValueEntityTestKit;
 import org.junit.jupiter.api.Test;
@@ -9,7 +9,7 @@ public class StatusPerPeriodTest {
 
     @Test
     void testInitialState() {
-        var testKit = ValueEntityTestKit.of(StatusPerPeriodEntity::new);
+        var testKit = ValueEntityTestKit.of(SingleLevelGroupingEntity::new);
         {
             assertThat(testKit.getState().counters()).isEmpty();
         }
@@ -18,7 +18,7 @@ public class StatusPerPeriodTest {
     /*
     @Test
     void testStateUpdate(){
-        StatusPerPeriod state = new StatusPerPeriod("periodName", "periodId", new HashMap<>());
+        StatusPerPeriod state = new StatusPerPeriod("groupName", "groupId", new HashMap<>());
         state.count(UserState.Status.REGISTERED.name(), 1);
         assertThat(state.counters().get(UserState.Status.REGISTERED.name())).isEqualTo(1);
         assertThat(state.counters().entrySet()).hasSize(1);
@@ -47,8 +47,8 @@ public class StatusPerPeriodTest {
             assertThat(wasUpdated).isTrue();
             assertThat(testKit.getState().counters().get(UserState.Status.REGISTERED.name())).isEqualTo(1);
             assertThat(testKit.getState().counters()).containsExactlyEntriesOf(Map.of(UserState.Status.REGISTERED.name(), 1));
-            assertThat(testKit.getState().periodName()).isEqualTo(DemoConfig.PeriodGroupingNames.PER_YEAR);
-            assertThat(testKit.getState().periodId()).isEqualTo("2023");
+            assertThat(testKit.getState().groupName()).isEqualTo(DemoConfig.PeriodGroupingNames.PER_YEAR);
+            assertThat(testKit.getState().groupId()).isEqualTo("2023");
         }
     }
 

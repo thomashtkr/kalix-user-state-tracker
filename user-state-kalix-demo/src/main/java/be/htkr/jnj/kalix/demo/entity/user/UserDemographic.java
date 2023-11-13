@@ -4,7 +4,7 @@ import java.time.LocalDate;
 
 public record UserDemographic(String favoriteColor, String country, String gender, LocalDate birthDate, AgeGroup ageGroup) {
 
-    enum AgeGroup {
+    public enum AgeGroup {
         LESS_18,
         _19_25,
         _26_35,

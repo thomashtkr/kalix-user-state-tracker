@@ -10,7 +10,10 @@ import java.time.temporal.IsoFields;
 public enum PeriodGroupingName {
     PER_YEAR("peryear"),
     PER_MONTH("permonth"),
-    PER_QUARTER("perquarter");
+    PER_QUARTER("perquarter"),
+
+    PER_AGEGROUP("peragegroup");
+
 
     public final String value;
 
@@ -25,6 +28,7 @@ public enum PeriodGroupingName {
             case PER_MONTH ->
                     String.format("%sM%02d", timeStampToPeriodId(timestamp, PER_YEAR), timestamp.atZone(ZoneId.systemDefault()).getMonthValue());
             case PER_QUARTER -> String.format("%sQ%d", timeStampToPeriodId(timestamp, PER_YEAR), getQuarter(timestamp));
+            default -> throw new IllegalArgumentException(periodName + " is not period based. Cannot create a groupId for it");
         };
     }
 
