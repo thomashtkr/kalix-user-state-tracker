@@ -5,7 +5,7 @@ import be.htkr.jnj.kalix.demo.events.UserBusinessEvent;
 import be.htkr.jnj.kalix.demo.events.UserStatusMovement;
 import be.htkr.jnj.kalix.demo.events.model.User;
 import be.htkr.jnj.kalix.demo.events.model.UserDetails;
-import be.htkr.jnj.kalix.demo.view.PeriodGroupingName;
+import be.htkr.jnj.kalix.demo.view.GroupingName;
 import be.htkr.jnj.kalix.demo.view.SingleLevelGroupedViewData;
 import kalix.javasdk.testkit.EventingTestKit;
 import kalix.javasdk.testkit.KalixTestKit;
@@ -29,9 +29,9 @@ import java.util.Map;
 import java.util.UUID;
 
 import static be.htkr.jnj.kalix.demo.DemoConfig.STATUS_MOVEMENT_STREAM;
-import static be.htkr.jnj.kalix.demo.view.PeriodGroupingName.PER_MONTH;
-import static be.htkr.jnj.kalix.demo.view.PeriodGroupingName.PER_QUARTER;
-import static be.htkr.jnj.kalix.demo.view.PeriodGroupingName.PER_YEAR;
+import static be.htkr.jnj.kalix.demo.view.GroupingName.PER_MONTH;
+import static be.htkr.jnj.kalix.demo.view.GroupingName.PER_QUARTER;
+import static be.htkr.jnj.kalix.demo.view.GroupingName.PER_YEAR;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(classes = Main.class)
@@ -82,18 +82,22 @@ public class ConsumeIntegrationTest extends KalixIntegrationTestKitSupport {
 
         Thread.sleep(5000L);
         Instant now = Instant.now();
-        String currentYear = PeriodGroupingName.timeStampToPeriodId(now, PER_YEAR);
+        String currentYear = GroupingName.timeStampToPeriodId(now, PER_YEAR);
 
         List<SingleLevelGroupedViewData> perYearResponse = getViewDataFor(PER_YEAR);
         verifyPerPeriod(perYearResponse, PER_YEAR, currentYear);
 
-        String currentMonth = PeriodGroupingName.timeStampToPeriodId(now, PER_MONTH);
+        String currentMonth = GroupingName.timeStampToPeriodId(now, PER_MONTH);
         List<SingleLevelGroupedViewData> perMonthResponse = getViewDataFor(PER_MONTH);
         verifyPerPeriod(perMonthResponse, PER_MONTH, currentMonth);
 
-        String currentQuarter = PeriodGroupingName.timeStampToPeriodId(now, PER_QUARTER);
+        String currentQuarter = GroupingName.timeStampToPeriodId(now, PER_QUARTER);
         List<SingleLevelGroupedViewData> perQuarterResponse = getViewDataFor(PER_QUARTER);
         verifyPerPeriod(perQuarterResponse, PER_QUARTER, currentQuarter);
+
+        List<SingleLevelGroupedViewData> perAgeGroup = getViewDataFor(GroupingName.PER_AGEGROUP);
+        System.out.println("perAgeGroup " + perAgeGroup);
+        perAgeGroup.forEach(a -> System.out.println(a));
 
 
 
@@ -114,7 +118,7 @@ public class ConsumeIntegrationTest extends KalixIntegrationTestKitSupport {
  */
     }
 
-    private void verifyPerPeriod(List<SingleLevelGroupedViewData> perYearResponse, PeriodGroupingName periodName, String periodId) {
+    private void verifyPerPeriod(List<SingleLevelGroupedViewData> perYearResponse, GroupingName periodName, String periodId) {
         var perPeriod = perYearResponse.get(0);
         assertThat(perPeriod.groupName()).isEqualTo(periodName.value);
         assertThat(perPeriod.groupId()).isEqualTo(periodId);
@@ -123,7 +127,7 @@ public class ConsumeIntegrationTest extends KalixIntegrationTestKitSupport {
         assertThat(perPeriod.counters().stream().filter(c -> c.status().equals("PROFILE_COMPLETE")).count()).isEqualTo(1);
     }
 
-    private List<SingleLevelGroupedViewData> getViewDataFor(PeriodGroupingName periodName) {
+    private List<SingleLevelGroupedViewData> getViewDataFor(GroupingName periodName) {
         return webClient.get().uri("/view/counters/{groupName}", Map.of("groupName", periodName.value))
                 .retrieve().bodyToFlux(SingleLevelGroupedViewData.class).collectList().block();
     }

@@ -5,16 +5,23 @@ import java.time.LocalDate;
 public record UserDemographic(String favoriteColor, String country, String gender, LocalDate birthDate, AgeGroup ageGroup) {
 
     public enum AgeGroup {
-        LESS_18,
-        _19_25,
-        _26_35,
-        _36_50,
-        _50_60,
-        _60_PLUS;
+        MINUS_18("minus18"),
+        _19_25("1925"),
+        _26_35("2635"),
+        _36_50("3650"),
+        _50_60("5060"),
+        _60_PLUS("60plus");
+
+        public final String value;
+
+        AgeGroup(String value) {
+            this.value = value;
+        }
+
 
         public static AgeGroup getAgeGroup(long age) {
             if(age < 18 ) {
-                return LESS_18;
+                return MINUS_18;
             }
             if (age < 26 ) {
                 return _19_25;

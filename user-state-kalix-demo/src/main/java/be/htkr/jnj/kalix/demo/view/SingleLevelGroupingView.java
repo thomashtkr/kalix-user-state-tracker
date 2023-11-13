@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 @ViewId("view_single_level_grouped")
 @Table("single_level_grouped")
-public class StatusPerPeriodView extends View<SingleLevelGroupedViewData> {
+public class SingleLevelGroupingView extends View<SingleLevelGroupedViewData> {
 
     @Subscribe.ValueEntity(SingleLevelGroupingEntity.class)
     public UpdateEffect<SingleLevelGroupedViewData> onChange(SingleLevelGroupedCounters groupedCounters) {
@@ -27,14 +27,14 @@ public class StatusPerPeriodView extends View<SingleLevelGroupedViewData> {
     }
 
     private List<StatusCounter> fromCounterMap(Map<UserState.Status, Integer> counters) {
-        return counters.entrySet().stream().map(e -> new StatusCounter(e.getKey().name(), e.getValue())).collect(Collectors.toList());
+        return counters.entrySet().stream()
+                .map(e -> new StatusCounter(e.getKey().name(), e.getValue())).collect(Collectors.toList());
     }
-
 
 
     @GetMapping("/view/counters/{groupName}")
     @Query("SELECT * FROM single_level_grouped WHERE groupName = :groupName" )
-    public Flux<SingleLevelGroupedViewData> getStatusPerPeriod(@PathVariable("groupName") String groupName) {
+    public Flux<SingleLevelGroupedViewData> getStatusPerGroup(@PathVariable("groupName") String groupName) {
         return null;
     }
 

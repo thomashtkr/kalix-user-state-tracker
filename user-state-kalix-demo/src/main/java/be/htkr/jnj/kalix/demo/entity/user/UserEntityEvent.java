@@ -3,6 +3,7 @@ package be.htkr.jnj.kalix.demo.entity.user;
 import kalix.javasdk.annotations.TypeName;
 
 import java.time.Instant;
+import java.util.Optional;
 
 @TypeName("user-status-movement")
 public sealed interface UserEntityEvent {
@@ -13,12 +14,13 @@ public sealed interface UserEntityEvent {
     Instant timestamp();
     UserDemographic demographic();
 
-    UserDemographic.AgeGroup getAgeGroup();
+    Optional<UserDemographic.AgeGroup> getAgeGroup();
 
 
      record UserStatusMovementEvent(String userId, UserState.Status status, Integer movement, Instant timestamp, UserDemographic demographic) implements UserEntityEvent {
-         public UserDemographic.AgeGroup getAgeGroup() {
-             return demographic() == null ? null : demographic().ageGroup();
+         public Optional<UserDemographic.AgeGroup> getAgeGroup() {
+             return Optional.ofNullable(demographic()).map(UserDemographic::ageGroup);
+
          }
      }
 }

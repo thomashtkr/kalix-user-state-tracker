@@ -1,13 +1,11 @@
 package be.htkr.jnj.kalix.demo.view;
 
-import be.htkr.jnj.kalix.demo.DemoConfig;
-
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.IsoFields;
 
-public enum PeriodGroupingName {
+public enum GroupingName {
     PER_YEAR("peryear"),
     PER_MONTH("permonth"),
     PER_QUARTER("perquarter"),
@@ -17,12 +15,12 @@ public enum PeriodGroupingName {
 
     public final String value;
 
-    PeriodGroupingName(String value) {
+    GroupingName(String value) {
         this.value = value;
     }
 
 
-    public static String timeStampToPeriodId(Instant timestamp, PeriodGroupingName periodName) {
+    public static String timeStampToPeriodId(Instant timestamp, GroupingName periodName) {
         return switch (periodName) {
             case PER_YEAR -> String.valueOf(timestamp.atZone(ZoneId.systemDefault()).getYear());
             case PER_MONTH ->

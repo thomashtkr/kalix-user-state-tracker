@@ -1,6 +1,6 @@
 package be.htkr.jnj.kalix.demo.entity.action;
 
-import be.htkr.jnj.kalix.demo.view.PeriodGroupingName;
+import be.htkr.jnj.kalix.demo.view.GroupingName;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -20,21 +20,21 @@ public class ToCounterDispatcherTest {
         var oct = Instant.parse("2023-10-09T00:00:00.00Z");
         var dec = Instant.parse("2023-12-09T00:00:00.00Z");
 
-        Assertions.assertThat(PeriodGroupingName.timeStampToPeriodId(in2023, PeriodGroupingName.PER_YEAR)).isEqualTo("2023");
+        Assertions.assertThat(GroupingName.timeStampToPeriodId(in2023, GroupingName.PER_YEAR)).isEqualTo("2023");
 
-        Assertions.assertThat(PeriodGroupingName.timeStampToPeriodId(jan, PeriodGroupingName.PER_MONTH)).isEqualTo("2023M01");
-        Assertions.assertThat(PeriodGroupingName.timeStampToPeriodId(mar, PeriodGroupingName.PER_MONTH)).isEqualTo("2023M03");
-        Assertions.assertThat(PeriodGroupingName.timeStampToPeriodId(apr, PeriodGroupingName.PER_MONTH)).isEqualTo("2023M04");
+        Assertions.assertThat(GroupingName.timeStampToPeriodId(jan, GroupingName.PER_MONTH)).isEqualTo("2023M01");
+        Assertions.assertThat(GroupingName.timeStampToPeriodId(mar, GroupingName.PER_MONTH)).isEqualTo("2023M03");
+        Assertions.assertThat(GroupingName.timeStampToPeriodId(apr, GroupingName.PER_MONTH)).isEqualTo("2023M04");
 
 
-        Assertions.assertThat(PeriodGroupingName.timeStampToPeriodId(jan, PeriodGroupingName.PER_QUARTER)).isEqualTo("2023Q1");
-        Assertions.assertThat(PeriodGroupingName.timeStampToPeriodId(mar, PeriodGroupingName.PER_QUARTER)).isEqualTo("2023Q1");
-        Assertions.assertThat(PeriodGroupingName.timeStampToPeriodId(apr, PeriodGroupingName.PER_QUARTER)).isEqualTo("2023Q2");
-        Assertions.assertThat(PeriodGroupingName.timeStampToPeriodId(jun, PeriodGroupingName.PER_QUARTER)).isEqualTo("2023Q2");
-        Assertions.assertThat(PeriodGroupingName.timeStampToPeriodId(jul, PeriodGroupingName.PER_QUARTER)).isEqualTo("2023Q3");
-        Assertions.assertThat(PeriodGroupingName.timeStampToPeriodId(sep, PeriodGroupingName.PER_QUARTER)).isEqualTo("2023Q3");
-        Assertions.assertThat(PeriodGroupingName.timeStampToPeriodId(oct, PeriodGroupingName.PER_QUARTER)).isEqualTo("2023Q4");
-        Assertions.assertThat(PeriodGroupingName.timeStampToPeriodId(dec, PeriodGroupingName.PER_QUARTER)).isEqualTo("2023Q4");
+        Assertions.assertThat(GroupingName.timeStampToPeriodId(jan, GroupingName.PER_QUARTER)).isEqualTo("2023Q1");
+        Assertions.assertThat(GroupingName.timeStampToPeriodId(mar, GroupingName.PER_QUARTER)).isEqualTo("2023Q1");
+        Assertions.assertThat(GroupingName.timeStampToPeriodId(apr, GroupingName.PER_QUARTER)).isEqualTo("2023Q2");
+        Assertions.assertThat(GroupingName.timeStampToPeriodId(jun, GroupingName.PER_QUARTER)).isEqualTo("2023Q2");
+        Assertions.assertThat(GroupingName.timeStampToPeriodId(jul, GroupingName.PER_QUARTER)).isEqualTo("2023Q3");
+        Assertions.assertThat(GroupingName.timeStampToPeriodId(sep, GroupingName.PER_QUARTER)).isEqualTo("2023Q3");
+        Assertions.assertThat(GroupingName.timeStampToPeriodId(oct, GroupingName.PER_QUARTER)).isEqualTo("2023Q4");
+        Assertions.assertThat(GroupingName.timeStampToPeriodId(dec, GroupingName.PER_QUARTER)).isEqualTo("2023Q4");
 
 
     }
