@@ -23,23 +23,13 @@ public class TopicConsumeAction extends Action {
     }
 
     @Subscribe.Topic(value = USER_BUSINESS_EVENTS_TOPIC)
-    public Effect<UserState.Status> onUserRegistered(UserBusinessEvent event) {
+    public Effect<UserState.Status> onBusinessEvent(UserBusinessEvent event) {
         logger.info("received event from topic {}", event);
 
-        var forwardToEntity = componentClient.forEventSourcedEntity(event.userId().toString()).call(UserStateEntity::updateStatus)
-                .params(new UpdateUserStateCommand(event));
-
-        return effects().forward(forwardToEntity);
-    }
-    /*
-    public Effect<UserState.Status> onUserRegistered(UserBusinessEvent.UserRegistered event) {
-        logger.info("received event from topic {}", event);
-
-        var forwardToEntity = componentClient.forEventSourcedEntity(event.user().id().toString()).call(UserStateEntity::updateStatus)
+        var forwardToEntity = componentClient.forEventSourcedEntity(event.userId()).call(UserStateEntity::updateStatus)
                 .params(new UpdateUserStateCommand(event));
 
         return effects().forward(forwardToEntity);
     }
 
-     */
 }

@@ -18,26 +18,26 @@ import java.util.List;
 @Id("userId")
 @TypeId("user")
 @RequestMapping("/user/{userId}")
-public class UserStateEntity extends EventSourcedEntity<UserState, UserEntityStatusMovementEvent> {
+public class UserStateEntity extends EventSourcedEntity<UserState, UserEntityEvent> {
 
     private final Logger logger = LoggerFactory.getLogger(UserStateEntity.class);
 
     @Override
     public UserState emptyState(){
-        return new UserState(null, null, null, new UserDemographic(null, null, null, null));
+        return new UserState(null, null, null, new UserDemographic(null, null, null, null, null));
     }
 
     @PostMapping("/update")
     public Effect<UserState.Status> updateStatus(@RequestBody UpdateUserStateCommand command) {
         logger.info("updateState with {}", command.event() );
         Instant now = Instant.now();
-        List<UserEntityStatusMovementEvent> movements = new ArrayList<>();
+        List<UserEntityEvent> movements = new ArrayList<>();
         var demographic = command.getDemographic().orElse(null);
         //+1 for the new status
-        movements.add(new UserEntityStatusMovementEvent(commandContext().entityId(), getStatusFromBusinessEvent(command.event()), 1, now, demographic));
+        movements.add(new UserEntityEvent.UserStatusMovementEvent(commandContext().entityId(), getStatusFromBusinessEvent(command.event()), 1, now, demographic));
         if(currentState().currentStatus() != null) {
             //-1 for the previousStatus status
-            movements.add(new UserEntityStatusMovementEvent(commandContext().entityId(), currentState().currentStatus(), -1, now, demographic));
+            movements.add(new UserEntityEvent.UserStatusMovementEvent(commandContext().entityId(), currentState().currentStatus(), -1, now, demographic));
         }
 
         return effects().emitEvents(movements)
@@ -55,11 +55,11 @@ public class UserStateEntity extends EventSourcedEntity<UserState, UserEntitySta
 
 
     @EventHandler
-    public UserState on(UserEntityStatusMovementEvent event) {
+    public UserState on(UserEntityEvent.UserStatusMovementEvent event) {
         if(event.movement() > 0) {
             var newState =  currentState().updateStatus(event.status(), event.timestamp());
             if(event.demographic() != null){
-                return newState.updateDemographic(event.demographic().favoriteColor(), event.demographic().country(), event.demographic().gender(), event.demographic().birthDate());
+                return newState.updateDemographic(event.demographic().favoriteColor(), event.demographic().country(), event.demographic().gender(), event.demographic().birthDate(), event.demographic().ageGroup())     ;
             } else {
                 return newState;
             }

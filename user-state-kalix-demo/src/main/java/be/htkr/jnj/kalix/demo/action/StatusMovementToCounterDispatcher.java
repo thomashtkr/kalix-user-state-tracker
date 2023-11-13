@@ -2,7 +2,7 @@ package be.htkr.jnj.kalix.demo.action;
 
 import be.htkr.jnj.kalix.demo.entity.statusperperiod.RegisterStatusMovementCommand;
 import be.htkr.jnj.kalix.demo.entity.statusperperiod.StatusPerPeriodEntity;
-import be.htkr.jnj.kalix.demo.entity.user.UserEntityStatusMovementEvent;
+import be.htkr.jnj.kalix.demo.entity.user.UserEntityEvent;
 import be.htkr.jnj.kalix.demo.entity.user.UserStateEntity;
 import be.htkr.jnj.kalix.demo.view.PeriodGroupingName;
 import com.google.protobuf.any.Any;
@@ -30,7 +30,7 @@ public class StatusMovementToCounterDispatcher extends Action {
         this.componentClient = componentClient;
     }
 
-    public Effect<String> dispatchMovement(UserEntityStatusMovementEvent event) {
+    public Effect<String> dispatchMovement(UserEntityEvent.UserStatusMovementEvent event) {
         return effects().reply("")
                 .addSideEffect(SideEffect.of(groupByPeriod(event, PER_YEAR), true),
                                 SideEffect.of(groupByPeriod(event, PER_MONTH), true),
@@ -42,7 +42,7 @@ public class StatusMovementToCounterDispatcher extends Action {
      *
      * Dispatches an event to the StatusPerPeriodEntity for a certain periodName. The periodId is derived from the timestamp
      */
-    private DeferredCall<Any, String> groupByPeriod(UserEntityStatusMovementEvent event, PeriodGroupingName periodName) {
+    private DeferredCall<Any, String> groupByPeriod(UserEntityEvent event, PeriodGroupingName periodName) {
         String periodId = PeriodGroupingName.timeStampToPeriodId(event.timestamp(), periodName);
         logger.info("dispatching StatusMovement to group {}, {}", periodName, periodId);
         return componentClient.forValueEntity(periodName.value, periodId)
