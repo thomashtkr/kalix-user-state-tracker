@@ -13,7 +13,7 @@ import java.util.Optional;
 
 import static be.htkr.jnj.kalix.demo.DemoConfig.STATUS_MOVEMENT_STREAM;
 
-@Subscribe.EventSourcedEntity(UserStateEntity.class)
+@Subscribe.EventSourcedEntity(value = UserStateEntity.class, ignoreUnknown = true)
 //@Publish.Stream(id = STATUS_MOVEMENT_STREAM)
 //@Acl(allow = @Acl.Matcher(service = "*"))
 public class StatusMovementPublisher extends Action {

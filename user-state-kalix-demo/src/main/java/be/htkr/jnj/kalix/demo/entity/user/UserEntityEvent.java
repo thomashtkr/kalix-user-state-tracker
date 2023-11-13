@@ -9,18 +9,18 @@ import java.util.Optional;
 public sealed interface UserEntityEvent {
 
     String userId();
-    UserState.Status status();
     Integer movement();
     Instant timestamp();
     UserDemographic demographic();
 
-    Optional<UserDemographic.AgeGroup> getAgeGroup();
+    default Optional<AgeGroup> getAgeGroup() {
+        return Optional.ofNullable(demographic()).map(UserDemographic::ageGroup);
+    }
 
 
      record UserStatusMovementEvent(String userId, UserState.Status status, Integer movement, Instant timestamp, UserDemographic demographic) implements UserEntityEvent {
-         public Optional<UserDemographic.AgeGroup> getAgeGroup() {
-             return Optional.ofNullable(demographic()).map(UserDemographic::ageGroup);
+     }
 
-         }
+     record UserAgeGroupMovementEvent(String userId, Integer movement, Instant timestamp, UserDemographic demographic, AgeGroup ageGroup) implements UserEntityEvent {
      }
 }

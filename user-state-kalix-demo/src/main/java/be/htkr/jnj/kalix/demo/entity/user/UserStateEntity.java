@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,15 +33,15 @@ public class UserStateEntity extends EventSourcedEntity<UserState, UserEntityEve
     public Effect<UserState.Status> updateStatus(@RequestBody UpdateUserStateCommand command) {
         logger.info("updateState with {}", command.event() );
         Instant now = Instant.now();
-        List<UserEntityEvent> movements = new ArrayList<>();
-        var demographic = command.getDemographic().orElse(null);
+        List<UserEntityEvent.UserStatusMovementEvent> movements = new ArrayList<>();
+        UserDemographic demographic = command.getDemographic().orElse(null);
         //+1 for the new status
-        movements.add(new UserEntityEvent.UserStatusMovementEvent(commandContext().entityId(), getStatusFromBusinessEvent(command.event()), 1, now, demographic));
+        UserState.Status newStatus = getStatusFromBusinessEvent(command.event());
+        movements.add(new UserEntityEvent.UserStatusMovementEvent(commandContext().entityId(), newStatus, 1, now, demographic));
         if(currentState().currentStatus() != null) {
             //-1 for the previousStatus status
             movements.add(new UserEntityEvent.UserStatusMovementEvent(commandContext().entityId(), currentState().currentStatus(), -1, now, demographic));
         }
-
         return effects().emitEvents(movements)
                 .thenReply(UserState::currentStatus);
     }
@@ -68,4 +70,33 @@ public class UserStateEntity extends EventSourcedEntity<UserState, UserEntityEve
             return currentState();
         }
     }
+
+    @PostMapping("/update-age-group")
+    public Effect<UserState.Status> updateAgeGroup(@RequestBody UpdateAgeGroupCommand command) {
+        logger.info("updating ageGroup of {}", commandContext().entityId());
+        var currentAgeGroup = currentState().demographic().ageGroup();
+        long age = ChronoUnit.YEARS.between(currentState().demographic().birthDate(), LocalDate.now());
+        var newAgeGroup = AgeGroup.getAgeGroup(age);
+        if(currentAgeGroup != newAgeGroup) {
+            logger.info("user {} moved to different ageGroup", commandContext().entityId());
+            List<UserEntityEvent.UserAgeGroupMovementEvent> movements = new ArrayList<>();
+            movements.add(new UserEntityEvent.UserAgeGroupMovementEvent(commandContext().entityId(), 1, Instant.now(), currentState().demographic(), newAgeGroup));
+            movements.add(new UserEntityEvent.UserAgeGroupMovementEvent(commandContext().entityId(), -1, Instant.now(), currentState().demographic(), currentAgeGroup));
+            return effects().emitEvents(movements)
+                    .thenReply(UserState::currentStatus);
+        } else {
+            return effects().reply(currentState().currentStatus());
+        }
+    }
+
+    @EventHandler
+    public UserState on(UserEntityEvent.UserAgeGroupMovementEvent event) {
+        if(event.movement() > 0) {
+            return  currentState().updateAgeGroup(event.ageGroup());
+        }else {
+            //the minus-events can be ignored. We only care about the new status
+            return currentState();
+        }
+    }
+
 }

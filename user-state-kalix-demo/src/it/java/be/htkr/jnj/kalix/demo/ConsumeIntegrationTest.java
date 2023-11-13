@@ -1,5 +1,6 @@
 package be.htkr.jnj.kalix.demo;
 
+import be.htkr.jnj.kalix.demo.entity.user.AgeGroup;
 import be.htkr.jnj.kalix.demo.entity.user.UserState;
 import be.htkr.jnj.kalix.demo.events.UserBusinessEvent;
 import be.htkr.jnj.kalix.demo.events.UserStatusMovement;
@@ -29,6 +30,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static be.htkr.jnj.kalix.demo.DemoConfig.STATUS_MOVEMENT_STREAM;
+import static be.htkr.jnj.kalix.demo.view.GroupingName.PER_AGEGROUP;
 import static be.htkr.jnj.kalix.demo.view.GroupingName.PER_MONTH;
 import static be.htkr.jnj.kalix.demo.view.GroupingName.PER_QUARTER;
 import static be.htkr.jnj.kalix.demo.view.GroupingName.PER_YEAR;
@@ -96,8 +98,11 @@ public class ConsumeIntegrationTest extends KalixIntegrationTestKitSupport {
         verifyPerPeriod(perQuarterResponse, PER_QUARTER, currentQuarter);
 
         List<SingleLevelGroupedViewData> perAgeGroup = getViewDataFor(GroupingName.PER_AGEGROUP);
+        verifyPerPeriod(perAgeGroup, PER_AGEGROUP, AgeGroup.MINUS_18.value);
+
         System.out.println("perAgeGroup " + perAgeGroup);
         perAgeGroup.forEach(a -> System.out.println(a));
+
 
 
 

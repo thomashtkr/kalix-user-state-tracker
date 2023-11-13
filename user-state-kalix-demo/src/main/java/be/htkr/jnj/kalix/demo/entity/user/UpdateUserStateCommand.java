@@ -10,7 +10,7 @@ public record UpdateUserStateCommand(UserBusinessEvent event) {
     public Optional<UserDemographic> getDemographic() {
         if(event instanceof UserBusinessEvent.UserProfileCompleted completed) {
             var age = ChronoUnit.YEARS.between(completed.details().birthDate(), LocalDate.now());
-            var ageGroup = UserDemographic.AgeGroup.getAgeGroup(age);
+            var ageGroup = AgeGroup.getAgeGroup(age);
             return Optional.of(new UserDemographic(completed.details().favoriteColor(),
                             completed.details().country(),
                             completed.details().gender(),
