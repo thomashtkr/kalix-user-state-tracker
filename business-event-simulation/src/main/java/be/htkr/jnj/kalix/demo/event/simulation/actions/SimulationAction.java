@@ -61,7 +61,11 @@ public class SimulationAction extends Action {
     private DeferredCall<Any, String> storeProfile(String userId) {
         logger.info(" updating profile for {}", userId);
         int month = random.nextInt(11) + 1;
-        LocalDate birthdate = createDate(2000, month, 5);
+        int oldest = 1950;
+        int youngest = 2020;
+        int year = random.nextInt(youngest-oldest) + oldest;
+        int day = random.nextInt(26) + 1;
+        LocalDate birthdate = createDate(year, month, day);
         return componentClient.forEventSourcedEntity(userId)
                 .call(UserEntity::storeProfile)
                 .params(new UserCommand.StoreUserProfile(userId+"_email", userId+"_color", userId+"_country", userId+"_gender", birthdate));

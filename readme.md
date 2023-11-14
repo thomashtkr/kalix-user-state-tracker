@@ -42,14 +42,15 @@ When running locally, the proxy for the simulation-application is running on por
 
 docker-compose up
 
-cd user-setate-kalix-demo
+cd user-state-kalix-demo
 mvn kalix:run
 
 curl -v -X POST  http://localhost:9000/api/simulate/users/10
 
-curl -v http://localhost:9001/view/counters/peryear/2023
-curl -v http://localhost:9001/view/counters/perquarter/2023Q4
-curl -v http://localhost:9001/view/counters/permonth/2023M11  
+curl -v http://localhost:9001/view/counters/peryear
+curl -v http://localhost:9001/view/counters/permonth
+curl -v http://localhost:9001/view/counters/perquarter
+curl -v http://localhost:9001/view/counters/peragegroup
 
 
 ```

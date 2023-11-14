@@ -48,7 +48,8 @@ public class StatusMovementDispatcher extends Action {
             allEffects.add(SideEffect.of(groupByAgeGroup(ageGroup, event.status(), event.movement()), true));
         });
 
-        if(event.status().equals(UserState.Status.PROFILE_COMPLETE)) {
+        //when the birthdate was registered, we schedule a future birthday event
+        if(event.status().equals(UserState.Status.PROFILE_COMPLETE) && event.demographic() != null) {
             allEffects.add(SideEffect.of(scheduleBirthdayAction(event.userId(), event.demographic().birthDate())));
         }
 
