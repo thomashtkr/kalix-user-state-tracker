@@ -80,8 +80,8 @@ public class UserStateEntity extends EventSourcedEntity<UserState, UserEntityEve
         if(currentAgeGroup != newAgeGroup) {
             logger.info("user {} moved to different ageGroup", commandContext().entityId());
             List<UserEntityEvent.UserAgeGroupMovementEvent> movements = new ArrayList<>();
-            movements.add(new UserEntityEvent.UserAgeGroupMovementEvent(commandContext().entityId(), 1, Instant.now(), currentState().demographic(), newAgeGroup));
-            movements.add(new UserEntityEvent.UserAgeGroupMovementEvent(commandContext().entityId(), -1, Instant.now(), currentState().demographic(), currentAgeGroup));
+            movements.add(new UserEntityEvent.UserAgeGroupMovementEvent(commandContext().entityId(), currentState().currentStatus(),1,  Instant.now(), currentState().demographic(), newAgeGroup));
+            movements.add(new UserEntityEvent.UserAgeGroupMovementEvent(commandContext().entityId(), currentState().currentStatus(),-1, Instant.now(), currentState().demographic(), currentAgeGroup));
             return effects().emitEvents(movements)
                     .thenReply(UserState::currentStatus);
         } else {

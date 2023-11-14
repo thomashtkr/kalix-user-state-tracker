@@ -21,6 +21,6 @@ public sealed interface UserEntityEvent {
      record UserStatusMovementEvent(String userId, UserState.Status status, Integer movement, Instant timestamp, UserDemographic demographic) implements UserEntityEvent {
      }
 
-     record UserAgeGroupMovementEvent(String userId, Integer movement, Instant timestamp, UserDemographic demographic, AgeGroup ageGroup) implements UserEntityEvent {
+     record UserAgeGroupMovementEvent(String userId, UserState.Status status, Integer movement, Instant timestamp, UserDemographic demographic, AgeGroup ageGroup) implements UserEntityEvent {
      }
 }
