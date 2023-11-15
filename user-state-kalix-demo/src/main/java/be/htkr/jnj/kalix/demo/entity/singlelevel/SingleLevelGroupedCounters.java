@@ -14,7 +14,7 @@ public record SingleLevelGroupedCounters(String groupName, String groupId, Map<U
         return new SingleLevelGroupedCounters(groupName(), groupId(), counters);
     }
 
-    public SingleLevelGroupedCounters setGroupData(String periodName, String periodId) {
-        return new SingleLevelGroupedCounters(periodName, periodId, counters());
+    public SingleLevelGroupedCounters setGroupData(String groupName, String groupId) {
+        return new SingleLevelGroupedCounters(groupName, groupId, counters());
     }
 }

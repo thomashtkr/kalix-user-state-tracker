@@ -33,8 +33,8 @@ public class SingleLevelGroupingView extends View<SingleLevelGroupedViewData> {
 
 
     @GetMapping("/view/counters/{groupName}")
-    @Query("SELECT * FROM single_level_grouped WHERE groupName = :groupName" )
-    public Flux<SingleLevelGroupedViewData> getStatusPerGroup(@PathVariable("groupName") String groupName) {
+    @Query("SELECT * as data FROM single_level_grouped WHERE groupName = :groupName" )
+    public SingleLevelGroupViewResponse getStatusPerGroup(@PathVariable("groupName") String groupName) {
         return null;
     }
 
