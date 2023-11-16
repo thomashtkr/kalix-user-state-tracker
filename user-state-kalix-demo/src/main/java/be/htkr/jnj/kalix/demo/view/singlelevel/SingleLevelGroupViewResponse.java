@@ -1,4 +1,4 @@
-package be.htkr.jnj.kalix.demo.view;
+package be.htkr.jnj.kalix.demo.view.singlelevel;
 
 import java.util.Collection;
 

@@ -9,8 +9,10 @@ public enum GroupingName {
     PER_YEAR("peryear"),
     PER_MONTH("permonth"),
     PER_QUARTER("perquarter"),
+    PER_AGEGROUP("peragegroup"),
+    PER_COUNTRY("percountry"),
 
-    PER_AGEGROUP("peragegroup");
+    PER_GENDER("pergender");
 
 
     public final String value;
@@ -32,5 +34,9 @@ public enum GroupingName {
 
     private static int getQuarter(Instant timestamp) {
         return LocalDate.ofInstant(timestamp, ZoneId.systemDefault()).get(IsoFields.QUARTER_OF_YEAR);
+    }
+
+    public static String dualGroupingKey(String value1, String value2){
+        return String.format("%s_%s", value1, value2);
     }
 }

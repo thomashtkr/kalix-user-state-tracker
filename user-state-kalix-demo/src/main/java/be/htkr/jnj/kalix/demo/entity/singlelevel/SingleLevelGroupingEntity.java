@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.HashMap;
 
-@TypeId("status-per-period")
+@TypeId("single-level-grouped-status")
 @Id({"groupName", "groupId"})
-@RequestMapping("/counters")
+@RequestMapping("/group")
 public class SingleLevelGroupingEntity extends ValueEntity<SingleLevelGroupedCounters> {
 
     private final Logger logger = LoggerFactory.getLogger(SingleLevelGroupingEntity.class);
@@ -24,11 +24,12 @@ public class SingleLevelGroupingEntity extends ValueEntity<SingleLevelGroupedCou
 
 
     @PostMapping("/{groupName}/{groupId}/register-movement")
-    public Effect<String> registerMovement(@PathVariable("groupName") String periodName, @PathVariable("groupId") String periodId, @RequestBody RegisterStatusMovementCommand command) {
-        logger.info("movement for groupName {} groupId {}", periodName, periodId);
+    public Effect<String> registerMovement(@PathVariable("groupName") String groupName, @PathVariable("groupId") String groupId,
+                                           @RequestBody RegisterStatusMovementCommand command) {
+        logger.info("movement for groupName {} groupId {}", groupName, groupId);
         SingleLevelGroupedCounters state = currentState();
         if(state.groupName() == null) {
-            state = state.setGroupData(periodName, periodId);
+            state = state.setGroupData(groupName, groupId);
         }
         return effects()
                 .updateState(state.count(command.status(), command.movement()))
