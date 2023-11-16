@@ -1,10 +1,13 @@
 package be.htkr.jnj.kalix.demo.event.simulation.entities.user;
 
 import kalix.javasdk.testkit.EventSourcedTestKit;
-import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 
 public class UserEntityTest {
@@ -45,9 +48,11 @@ public class UserEntityTest {
     void testUserProfile() {
         var testKit = EventSourcedTestKit.of(UserEntity::new);
         {
-            var result = testKit.call(e -> e.storeProfile(new UserCommand.StoreUserProfile( "john@gmail.com", "blue", "BE", "M")));
+            LocalDate birtdate = LocalDate.now();
+            var result = testKit.call(e -> e.storeProfile(new UserCommand.StoreUserProfile( "john@gmail.com", "blue", "BE", "M", birtdate)));
             assertThat(result.getReply()).isEqualTo("OK");
             assertThat(testKit.getState().favoriteColor()).isEqualTo("blue");
+            assertThat(testKit.getState().birthDate()).isEqualTo(birtdate);
         }
     }
 

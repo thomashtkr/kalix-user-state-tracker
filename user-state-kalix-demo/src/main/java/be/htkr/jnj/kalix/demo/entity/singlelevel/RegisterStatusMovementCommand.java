@@ -1,4 +1,4 @@
-package be.htkr.jnj.kalix.demo.entity.statusperperiod;
+package be.htkr.jnj.kalix.demo.entity.singlelevel;
 
 import be.htkr.jnj.kalix.demo.entity.user.UserState;
 

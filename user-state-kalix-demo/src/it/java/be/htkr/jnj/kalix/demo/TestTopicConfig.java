@@ -12,7 +12,7 @@ public class TestTopicConfig {
 
     @Bean
     public KalixTestKit.Settings settings() {
-        return KalixTestKit.Settings.DEFAULT.withAclEnabled()
+        return KalixTestKit.Settings.DEFAULT
                 .withTopicIncomingMessages(USER_BUSINESS_EVENTS_TOPIC)
                 .withTopicOutgoingMessages(STATUS_MOVEMENT_STREAM);
     }

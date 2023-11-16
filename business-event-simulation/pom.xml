@@ -16,6 +16,7 @@
 
     <!-- TODO Update to your own Docker repository or Docker Hub scope -->
     <dockerImage>thomashtkr-kalix/${project.artifactId}</dockerImage>
+    <!--suppress UnresolvedMavenProperty -->
     <dockerTag>${project.version}-${build.timestamp}</dockerTag>
     <maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
     <mainClass>be.htkr.jnj.kalix.demo.event.simulation.Main</mainClass>
@@ -184,7 +185,7 @@
       <plugin>
         <groupId>io.kalix</groupId>
         <artifactId>kalix-maven-plugin</artifactId>
-        <version>1.3.4</version>
+        <version>${kalix-maven-plugin-version}</version>
         <executions>
           <execution>
             <goals>

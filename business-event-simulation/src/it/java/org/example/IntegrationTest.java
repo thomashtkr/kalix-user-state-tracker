@@ -2,7 +2,6 @@ package org.example;
 
 import be.htkr.jnj.kalix.demo.event.simulation.Main;
 import kalix.spring.testkit.KalixIntegrationTestKitSupport;
-
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +30,6 @@ public class IntegrationTest extends KalixIntegrationTestKitSupport {
   public void testSimulateUser() throws Exception {
     int numberOfUsers = 5;
     var createdIds = webClient.post().uri("/api/simulate/users/" + numberOfUsers).retrieve().bodyToMono(List.class).block();
-    createdIds.forEach(id -> System.out.println("created " + id));
     Assertions.assertThat(createdIds).hasSize(numberOfUsers);
 
     createdIds.forEach(id -> {
