@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Id("userId")
 @TypeId("user")
@@ -33,17 +34,24 @@ public class UserStateEntity extends EventSourcedEntity<UserState, UserEntityEve
     public Effect<UserState.Status> updateStatus(@RequestBody UpdateUserStateCommand command) {
         logger.info("updateState with {}", command.event() );
         Instant now = Instant.now();
-        List<UserEntityEvent.UserStatusMovementEvent> movements = new ArrayList<>();
         UserDemographic demographic = command.getDemographic().orElse(null);
-        //+1 for the new status
+
         UserState.Status newStatus = getStatusFromBusinessEvent(command.event());
-        movements.add(new UserEntityEvent.UserStatusMovementEvent(commandContext().entityId(), newStatus, 1, now, demographic));
-        if(currentState().currentStatus() != null) {
-            //-1 for the previousStatus status
-            movements.add(new UserEntityEvent.UserStatusMovementEvent(commandContext().entityId(), currentState().currentStatus(), -1, now, demographic));
+        if(! Objects.equals(newStatus, currentState().currentStatus() )) {
+            List<UserEntityEvent.UserStatusMovementEvent> movements = new ArrayList<>();
+            //+1 for the new status
+            movements.add(new UserEntityEvent.UserStatusMovementEvent(commandContext().entityId(), newStatus, 1, now, demographic));
+            if(currentState().currentStatus() != null) {
+                //-1 for the previousStatus status
+                movements.add(new UserEntityEvent.UserStatusMovementEvent(commandContext().entityId(), currentState().currentStatus(), -1, now, demographic));
+            }
+            return effects().emitEvents(movements)
+                    .thenReply(UserState::currentStatus);
+        } else {
+            //deduplication. Commands (based of a topic) can be delivered multiple times
+            return effects().reply(currentState().currentStatus());
         }
-        return effects().emitEvents(movements)
-                .thenReply(UserState::currentStatus);
+
     }
 
     private UserState.Status getStatusFromBusinessEvent(UserBusinessEvent event) {

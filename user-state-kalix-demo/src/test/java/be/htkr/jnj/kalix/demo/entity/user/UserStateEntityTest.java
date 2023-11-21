@@ -86,7 +86,24 @@ public class UserStateEntityTest {
             assertThat(statusMovements.get(0).status()).isEqualTo(UserState.Status.PROFILE_COMPLETE);
             assertThat(statusMovements.get(0).movement()).isEqualTo(1);
             assertThat(statusMovements).hasSize(1);
+        }
+    }
 
+    @Test
+    void testDeduplicateCommands() {
+        var testKit = EventSourcedTestKit.of(UserStateEntity::new);
+        {
+            var userId = UUID.randomUUID().toString();
+            testKit.call(e -> e.updateStatus(new UpdateUserStateCommand(new UserBusinessEvent.UserRegistered(userId, new User(userId, "name", "email"), Instant.now()))));
+            assertThat(testKit.getAllEvents()).hasSize(1);
+
+            testKit.call(e -> e.updateStatus(new UpdateUserStateCommand(new UserBusinessEvent.UserVerified(userId, "email", Instant.now()))));
+            testKit.call(e -> e.updateStatus(new UpdateUserStateCommand(new UserBusinessEvent.UserVerified(userId, "email", Instant.now()))));
+            testKit.call(e -> e.updateStatus(new UpdateUserStateCommand(new UserBusinessEvent.UserVerified(userId, "email", Instant.now()))));
+            testKit.call(e -> e.updateStatus(new UpdateUserStateCommand(new UserBusinessEvent.UserVerified(userId, "email", Instant.now()))));
+            assertThat(testKit.getAllEvents().size()).isEqualTo(3);
+            assertThat(testKit.getState().currentStatus()).isEqualTo(UserState.Status.EMAIL_VERIFIED);
+            assertThat(testKit.getState().previousStatus()).isEqualTo(UserState.Status.REGISTERED);
 
         }
     }
