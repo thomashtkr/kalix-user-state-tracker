@@ -1,6 +1,5 @@
 package be.htkr.jnj.kalix.demo.action;
 
-import be.htkr.jnj.kalix.demo.entity.user.UserEntityEvent;
 import be.htkr.jnj.kalix.demo.entity.user.UserStateEntity;
 import be.htkr.jnj.kalix.demo.events.UserStatusMovement;
 import kalix.javasdk.action.Action;
@@ -21,7 +20,13 @@ public class StatusMovementPublisher extends Action {
     private final Logger logger = LoggerFactory.getLogger(StatusMovementPublisher.class);
 
     @Publish.Topic(STATUS_MOVEMENT_STREAM)
-    public Effect<UserStatusMovement> publishMovement(UserEntityEvent.UserStatusMovementEvent event) {
+    public Effect<UserStatusMovement> publishStatusIncrement(be.htkr.jnj.kalix.demo.entity.user.events.UserStatusMovement.UserStatusIncrement event) {
+        logger.info("publishing {}", event);
+        String status = Optional.ofNullable(event.status()).map(Enum::name).orElse(null);
+        return effects().reply(new UserStatusMovement(event.userId(), status, event.movement(), event.timestamp()));
+    }
+    @Publish.Topic(STATUS_MOVEMENT_STREAM)
+    public Effect<UserStatusMovement> publishStatusDecrement(be.htkr.jnj.kalix.demo.entity.user.events.UserStatusMovement.UserStatusDecrement event) {
         logger.info("publishing {}", event);
         String status = Optional.ofNullable(event.status()).map(Enum::name).orElse(null);
         return effects().reply(new UserStatusMovement(event.userId(), status, event.movement(), event.timestamp()));

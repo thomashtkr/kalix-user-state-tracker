@@ -1,9 +1,12 @@
 package be.htkr.jnj.kalix.demo.entity.user;
 
 import java.time.Instant;
-import java.time.LocalDate;
 
-public record UserState(Status previousStatus, Status currentStatus, Instant lastMovement, UserDemographic demographic) {
+public record UserState(Status previousStatus, Status currentStatus, Instant lastMovement,UserDemographic previousDemographic, UserDemographic currentDemographic) {
+
+    public UserState() {
+        this(null, null, null, new UserDemographic(), new UserDemographic());
+    }
 
     public enum Status {
         REGISTERED,
@@ -13,14 +16,10 @@ public record UserState(Status previousStatus, Status currentStatus, Instant las
     }
 
     public UserState updateStatus(Status newStatus, Instant timeStamp) {
-        return new UserState(currentStatus(), newStatus, timeStamp, demographic());
+        return new UserState(currentStatus(), newStatus, timeStamp, previousDemographic(), currentDemographic());
     }
 
-    public UserState updateDemographic(String favoriteColor, String country, String gender, LocalDate birthDate, AgeGroup ageGroup) {
-        return new UserState(previousStatus(), currentStatus(), lastMovement(), new UserDemographic(favoriteColor, country, gender, birthDate, ageGroup));
-    }
-
-    public UserState updateAgeGroup(AgeGroup ageGroup) {
-        return new UserState(previousStatus(), currentStatus(), lastMovement(), demographic().updateAgeGroup(ageGroup));
+    public UserState updateDemographic(UserDemographic demographic) {
+        return new UserState(previousStatus(), currentStatus(), lastMovement(), currentDemographic(), new UserDemographic(demographic.favoriteColor(), demographic.country(), demographic.gender(), demographic.birthDate(), demographic.ageGroup()));
     }
 }

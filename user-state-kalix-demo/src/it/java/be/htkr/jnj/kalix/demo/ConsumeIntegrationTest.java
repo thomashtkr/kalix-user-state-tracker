@@ -7,6 +7,8 @@ import be.htkr.jnj.kalix.demo.events.UserStatusMovement;
 import be.htkr.jnj.kalix.demo.events.model.User;
 import be.htkr.jnj.kalix.demo.events.model.UserDetails;
 import be.htkr.jnj.kalix.demo.view.GroupingName;
+import be.htkr.jnj.kalix.demo.view.dual.DualLevelGroupViewResponse;
+import be.htkr.jnj.kalix.demo.view.dual.DualLevelGroupedViewData;
 import be.htkr.jnj.kalix.demo.view.singlelevel.SingleLevelGroupViewResponse;
 import be.htkr.jnj.kalix.demo.view.singlelevel.SingleLevelGroupedViewData;
 import kalix.javasdk.testkit.EventingTestKit;
@@ -32,6 +34,8 @@ import java.util.UUID;
 
 import static be.htkr.jnj.kalix.demo.DemoConfig.STATUS_MOVEMENT_STREAM;
 import static be.htkr.jnj.kalix.demo.view.GroupingName.PER_AGEGROUP;
+import static be.htkr.jnj.kalix.demo.view.GroupingName.PER_COUNTRY;
+import static be.htkr.jnj.kalix.demo.view.GroupingName.PER_GENDER;
 import static be.htkr.jnj.kalix.demo.view.GroupingName.PER_MONTH;
 import static be.htkr.jnj.kalix.demo.view.GroupingName.PER_QUARTER;
 import static be.htkr.jnj.kalix.demo.view.GroupingName.PER_YEAR;
@@ -99,33 +103,42 @@ public class ConsumeIntegrationTest extends KalixIntegrationTestKitSupport {
         verifyPerPeriod(perQuarterResponse, PER_QUARTER, currentQuarter);
 
         Collection<SingleLevelGroupedViewData> perAgeGroup = getViewDataFor(GroupingName.PER_AGEGROUP);
-        verifyPerPeriod(perAgeGroup, PER_AGEGROUP, AgeGroup.MINUS_18.value);
+        var perGroup = perAgeGroup.stream().toList().get(0);
+        assertThat(perGroup.groupName()).isEqualTo(PER_AGEGROUP.value);
+        assertThat(perGroup.groupId()).isEqualTo(AgeGroup.MINUS_18.value);
+        assertThat(perGroup.counters()).hasSize(1);
+        assertThat(perGroup.counters().stream().filter(c -> c.status().equals("PROFILE_COMPLETE")).count()).isEqualTo(1);
 
-        System.out.println("perAgeGroup " + perAgeGroup);
-        perAgeGroup.forEach(a -> System.out.println(a));
+        var perCountryGender = getViewDataFor(GroupingName.PER_GENDER, GroupingName.PER_COUNTRY);
+        System.out.println(perCountryGender);
+        var perCG = perCountryGender.stream().toList().get(0);
+        assertThat(perCG.group1()).isEqualTo(PER_GENDER.value);
+        assertThat(perCG.group2()).isEqualTo(PER_COUNTRY.value);
+        assertThat(perCG.groupId()).isEqualTo("M_BE");
+        assertThat(perCG.counters()).hasSize(1);
+        assertThat(perCG.counters().stream().filter(c -> c.status().equals("PROFILE_COMPLETE")).count()).isEqualTo(1);
+//move ageGroup
+        eventsTopic.publish(new UserBusinessEvent.UserProfileCompleted(userId, new UserDetails("blue", "BE", "M", birthDate.minusYears(20)), Instant.now()), topicId);
+        Thread.sleep(5000);
+        perAgeGroup = getViewDataFor(GroupingName.PER_AGEGROUP);
+        System.out.println("perAgeGroup after agegroup move: " + perAgeGroup);
+        assertThat(perAgeGroup).hasSize(2);
+        perGroup = perAgeGroup.stream().toList().get(0);
+        assertThat(perGroup.groupName()).isEqualTo(PER_AGEGROUP.value);
+        assertThat(perGroup.groupId()).isEqualTo(AgeGroup.MINUS_18.value);
+        assertThat(perGroup.counters().get(0).count()).isEqualTo(0);
+        assertThat(perGroup.groupName()).isEqualTo(PER_AGEGROUP.value);
+        perGroup = perAgeGroup.stream().toList().get(1);
+        assertThat(perGroup.groupId()).isEqualTo(AgeGroup._19_25.value);
+        assertThat(perGroup.counters().get(0).count()).isEqualTo(1);
+        assertThat(perGroup.counters().stream().filter(c -> c.status().equals("PROFILE_COMPLETE")).count()).isEqualTo(1);
 
 
 
-
-/*
-        StatusPerPeriodViewData resultPerYear = componentClient.forView()
-                .call(StatusPerPeriodView::getStatusPerPeriod)
-                .params(PER_YEAR.value, currentYear)
-                .execute()
-                .toCompletableFuture().get();
-
-        System.out.println("response " + resultPerYear);
-        String currentMonth = PeriodGroupingName.timeStampToPeriodId(now, PER_YEAR);
-        StatusPerPeriodViewData resultPerMonth = componentClient.forView().call(StatusPerPeriodView::getStatusPerPeriod)
-                .params(PeriodGroupingName.PER_MONTH.name(), currentMonth)
-                .execute()
-                .toCompletableFuture().get();
-
- */
     }
 
-    private void verifyPerPeriod(Collection<SingleLevelGroupedViewData> perYearResponse, GroupingName periodName, String periodId) {
-        var perPeriod = perYearResponse.stream().toList().get(0);
+    private void verifyPerPeriod(Collection<SingleLevelGroupedViewData> groupedData, GroupingName periodName, String periodId) {
+        var perPeriod = groupedData.stream().toList().get(0);
         assertThat(perPeriod.groupName()).isEqualTo(periodName.value);
         assertThat(perPeriod.groupId()).isEqualTo(periodId);
         assertThat(perPeriod.counters()).hasSize(2);
@@ -136,5 +149,9 @@ public class ConsumeIntegrationTest extends KalixIntegrationTestKitSupport {
     private Collection<SingleLevelGroupedViewData> getViewDataFor(GroupingName periodName) {
         return webClient.get().uri("/view/counters/{groupName}", Map.of("groupName", periodName.value))
                 .retrieve().bodyToMono(SingleLevelGroupViewResponse.class).block().data();
+    }
+    private Collection<DualLevelGroupedViewData> getViewDataFor(GroupingName group1, GroupingName group2) {
+        return webClient.get().uri("/view/counters/{groupName1}/{groupName2}", Map.of("groupName1", group1.value, "groupName2", group2.value))
+                .retrieve().bodyToMono(DualLevelGroupViewResponse.class).block().data();
     }
 }
