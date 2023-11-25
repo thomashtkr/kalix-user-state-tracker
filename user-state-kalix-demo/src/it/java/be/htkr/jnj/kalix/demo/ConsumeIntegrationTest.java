@@ -132,9 +132,6 @@ public class ConsumeIntegrationTest extends KalixIntegrationTestKitSupport {
         assertThat(perGroup.groupId()).isEqualTo(AgeGroup._19_25.value);
         assertThat(perGroup.counters().get(0).count()).isEqualTo(1);
         assertThat(perGroup.counters().stream().filter(c -> c.status().equals("PROFILE_COMPLETE")).count()).isEqualTo(1);
-
-
-
     }
 
     private void verifyPerPeriod(Collection<SingleLevelGroupedViewData> groupedData, GroupingName periodName, String periodId) {

@@ -26,7 +26,7 @@ public class SingleLevelGroupingEntity extends ValueEntity<SingleLevelGroupedCou
     @PostMapping("/{groupName}/{groupId}/register-movement")
     public Effect<String> registerMovement(@PathVariable("groupName") String groupName, @PathVariable("groupId") String groupId,
                                            @RequestBody RegisterStatusMovementCommand command) {
-        logger.info("movement for groupName {} groupId {}", groupName, groupId);
+        logger.info("movement {} for groupName {} groupId {}",command.movement(), groupName, groupId);
         SingleLevelGroupedCounters state = currentState();
         if(state.groupName() == null) {
             state = state.setGroupData(groupName, groupId);

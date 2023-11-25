@@ -73,36 +73,39 @@ public class UserStateEntity extends EventSourcedEntity<UserState, UserEntityEve
     private static List<UserEntityEvent> differencesWithCurrentState(UserState currentState, UpdateUserStateCommand command, String entityId) {
         final List<UserEntityEvent> diffs = new ArrayList<>();
         Instant now = Instant.now();
-
         UserState.Status newStatus = getStatusFromBusinessEvent(command.event());
+
+        UserDemographic currentDemographic = currentState.currentDemographic();
+
         if( !Objects.equals(newStatus, currentState.currentStatus() )) {
             List<UserEntityEvent> statusMovements = new ArrayList<>();
             //+1 for the new status
-            statusMovements.add(new UserStatusMovement.UserStatusIncrement(entityId, newStatus, now));
+            statusMovements.add(new UserStatusMovement.UserStatusIncrement(entityId, newStatus, currentDemographic, now));
             if(currentState.currentStatus() != null) {
                 //-1 for the previousStatus status
-                statusMovements.add(new UserStatusMovement.UserStatusDecrement(entityId, currentState.currentStatus(), now));
+                statusMovements.add(new UserStatusMovement.UserStatusDecrement(entityId, currentState.currentStatus(), currentDemographic, now));
             }
             diffs.addAll(statusMovements);
         }
-
         List<UserEntityEvent> demographicMovements = command.getDemographic().map(newDemographic -> {
             List<UserEntityEvent> movements = new ArrayList<>();
-            UserDemographic currentDemographic = currentState.currentDemographic();
+
             //every updated demographic should result in a separate event.
             //only ageGroup is implemented here
             if(!Objects.equals(newDemographic, currentDemographic)) {
                 var currentAgeGroup = currentDemographic.ageGroup();
                 if(!Objects.equals(currentAgeGroup, newDemographic.ageGroup())){
-                    if(currentAgeGroup != null){
-                        movements.add(new DemographicMovement.DemographicDecrement(entityId, currentState.currentStatus(), Instant.now(), currentDemographic));
-                    }
                     movements.add(new DemographicMovement.DemographicIncrement(entityId, newStatus, Instant.now(), newDemographic));
+                    if(currentAgeGroup != null){
+                        movements.add(new DemographicMovement.DemographicDecrement(entityId, newStatus, Instant.now(), currentDemographic));
+                    }
                 }
             }
             return movements;
         }).orElse(List.of());
         diffs.addAll(demographicMovements);
+
+
         return diffs;
     }
 

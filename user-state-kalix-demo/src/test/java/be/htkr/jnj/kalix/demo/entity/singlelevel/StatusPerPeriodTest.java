@@ -44,6 +44,18 @@ public class StatusPerPeriodTest {
         assertThat(state.counters().get(UserState.Status.EMAIL_VERIFIED)).isEqualTo(10);
         assertThat(state.counters().get(UserState.Status.GDPR_CONFIRMED)).isEqualTo(0);
         assertThat(state.counters().entrySet()).hasSize(3);
+
+        state.count(UserState.Status.EMAIL_VERIFIED, -1);
+        assertThat(state.counters().get(UserState.Status.REGISTERED)).isEqualTo(0);
+        assertThat(state.counters().get(UserState.Status.EMAIL_VERIFIED)).isEqualTo(9);
+        assertThat(state.counters().get(UserState.Status.GDPR_CONFIRMED)).isEqualTo(0);
+        assertThat(state.counters().entrySet()).hasSize(3);
+
+        state.count(UserState.Status.EMAIL_VERIFIED, -1);
+        assertThat(state.counters().get(UserState.Status.REGISTERED)).isEqualTo(0);
+        assertThat(state.counters().get(UserState.Status.EMAIL_VERIFIED)).isEqualTo(8);
+        assertThat(state.counters().get(UserState.Status.GDPR_CONFIRMED)).isEqualTo(0);
+        assertThat(state.counters().entrySet()).hasSize(3);
     }
 
     @Test

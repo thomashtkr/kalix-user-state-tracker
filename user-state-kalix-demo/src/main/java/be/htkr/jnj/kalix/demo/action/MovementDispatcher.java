@@ -73,6 +73,10 @@ public class MovementDispatcher extends Action {
                 SideEffect.of(groupByPeriod(event, PER_MONTH), true),
                 SideEffect.of(groupByPeriod(event, PER_QUARTER), true)));
 
+        event.getAgeGroup().ifPresent(ageGroup -> {
+            allEffects.add(SideEffect.of(groupByAgeGroup(event.userId(), ageGroup, event.status(), event.movement()), true));
+        });
+
         return effects().reply("OK")
                 .addSideEffect(allEffects.toArray(new SideEffect[0]));
     }
@@ -88,7 +92,7 @@ public class MovementDispatcher extends Action {
         logger.info("dispatchDemographicMovement {} movement {}", event.demographic(), event.movement());
         List<SideEffect> allEffects = new ArrayList<>();
         event.getAgeGroup().ifPresent(ageGroup -> {
-            allEffects.add(SideEffect.of(groupByAgeGroup(ageGroup, event.status(), event.movement()), true));
+            allEffects.add(SideEffect.of(groupByAgeGroup(event.userId(), ageGroup, event.status(), event.movement()), true));
         });
 
         //when the birthdate was registered, we schedule a future birthday event
@@ -120,8 +124,8 @@ public class MovementDispatcher extends Action {
                 .params(periodName.value, periodId, new RegisterStatusMovementCommand(event.status(), event.movement()));
     }
 
-    private DeferredCall<Any, String> groupByAgeGroup(AgeGroup ageGroup, UserState.Status status, int movement) {
-        logger.info("dispatching {} {} to ageGroup grouping {}", movement, status, ageGroup.value);
+    private DeferredCall<Any, String> groupByAgeGroup(String userId, AgeGroup ageGroup, UserState.Status status, int movement) {
+        logger.info("dispatching {} {} to ageGroup grouping {} for user {}", movement, status, ageGroup.value, userId);
         return componentClient.forValueEntity(GroupingName.PER_AGEGROUP.value, ageGroup.value)
                 .call(SingleLevelGroupingEntity::registerMovement)
                 .params(GroupingName.PER_AGEGROUP.value, ageGroup.value, new RegisterStatusMovementCommand(status, movement));
