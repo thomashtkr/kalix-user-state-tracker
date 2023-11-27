@@ -9,9 +9,6 @@ import be.htkr.jnj.kalix.demo.entity.user.UserStateEntity;
 import be.htkr.jnj.kalix.demo.entity.user.events.DemographicMovement;
 import be.htkr.jnj.kalix.demo.entity.user.events.UserStatusMovement;
 import be.htkr.jnj.kalix.demo.view.GroupingName;
-import com.google.protobuf.any.Any;
-import kalix.javasdk.DeferredCall;
-import kalix.javasdk.SideEffect;
 import kalix.javasdk.action.Action;
 import kalix.javasdk.annotations.Subscribe;
 import kalix.javasdk.client.ComponentClient;
@@ -21,6 +18,8 @@ import org.slf4j.LoggerFactory;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 import static be.htkr.jnj.kalix.demo.view.GroupingName.PER_MONTH;
 import static be.htkr.jnj.kalix.demo.view.GroupingName.PER_QUARTER;
@@ -53,41 +52,47 @@ public class MovementDispatcher extends Action {
     }
 
     private Effect<String> dispatchStatusMovement(UserStatusMovement event) {
-        List<SideEffect> allEffects = new ArrayList<>(List.of(
-                SideEffect.of(groupByPeriod(event, PER_YEAR), true),
-                SideEffect.of(groupByPeriod(event, PER_MONTH), true),
-                SideEffect.of(groupByPeriod(event, PER_QUARTER), true)));
+        List<CompletionStage<String>> groupByRequests = new ArrayList<>(List.of(
+                groupByPeriod(event, PER_YEAR),
+                groupByPeriod(event, PER_MONTH),
+                groupByPeriod(event, PER_QUARTER))
+        );
 
         event.getAgeGroup().ifPresent(ageGroup -> {
             //if there is an agegroup, we need to dispatch the statusMovement to that ageGroup
-            allEffects.add(SideEffect.of(groupByAgeGroup(event.userId(), ageGroup, event.status(), event.movement()), true));
+            groupByRequests.add(groupByAgeGroup(event.userId(), ageGroup, event.status(), event.movement()));
         });
 
-        return effects().reply("OK")
-                .addSideEffect(allEffects.toArray(new SideEffect[0]));
+        CompletableFuture<String> all = CompletableFuture.allOf(groupByRequests.toArray(new CompletableFuture[0]))
+                .thenApply(done -> "OK");
+
+        return effects().asyncReply(all);
     }
 
     //eventHandler
     private Effect<String> dispatchDemographicMovement(DemographicMovement event) {
         logger.info("dispatchDemographicMovement {} movement {}", event.demographic(), event.movement());
-        List<SideEffect> allEffects = new ArrayList<>();
+        List<CompletionStage<String>> groupByRequests = new ArrayList<>();
         event.getAgeGroup().ifPresent(ageGroup -> {
-            allEffects.add(SideEffect.of(groupByAgeGroup(event.userId(), ageGroup, event.status(), event.movement()), true));
+            groupByRequests.add(groupByAgeGroup(event.userId(), ageGroup, event.status(), event.movement()));
         });
 
         //when the birthdate was registered, we schedule a future birthday event
         if(event.status().equals(UserState.Status.PROFILE_COMPLETE) && event.demographic() != null) {
-            allEffects.add(SideEffect.of(scheduleBirthdayAction(event.userId(), event.demographic().birthDate())));
+            groupByRequests.add(scheduleBirthdayAction(event.userId(), event.demographic().birthDate()));
         }
 
         //group by gender and country
         if(event.demographic() != null){
-            allEffects.add(SideEffect.of(groupByGenderAndCountry(event)));
+            groupByRequests.add(groupByGenderAndCountry(event));
         }
 
+        CompletableFuture<String> all = CompletableFuture.allOf(groupByRequests.toArray(new CompletableFuture[0]))
+                .thenApply(done -> "OK");
+
+
         return effects()
-                .reply("OK")
-                .addSideEffects(allEffects);
+                .asyncReply(all);
     }
 
 
@@ -95,35 +100,39 @@ public class MovementDispatcher extends Action {
      *
      * Dispatches an event to the StatusPerPeriodEntity for a certain groupName. The groupId is derived from the timestamp
      */
-    private DeferredCall<Any, String> groupByPeriod(UserStatusMovement event, GroupingName periodName) {
+    private CompletionStage<String> groupByPeriod(UserStatusMovement event, GroupingName periodName) {
         String periodId = GroupingName.timeStampToPeriodId(event.timestamp(), periodName);
         logger.info("dispatching StatusMovement {} {} to group {}, {}", event.movement(), event.status(), periodName, periodId);
         return componentClient.forValueEntity(periodName.value, periodId)
                 .call(SingleLevelGroupingEntity::registerMovement)
-                .params(periodName.value, periodId, new RegisterStatusMovementCommand(event.status(), event.movement()));
+                .params(periodName.value, periodId, new RegisterStatusMovementCommand(event.status(), event.movement()))
+                .execute();
     }
 
-    private DeferredCall<Any, String> groupByAgeGroup(String userId, AgeGroup ageGroup, UserState.Status status, int movement) {
+    private CompletionStage<String> groupByAgeGroup(String userId, AgeGroup ageGroup, UserState.Status status, int movement) {
         logger.info("dispatching {} {} to ageGroup grouping {} for user {}", movement, status, ageGroup.value, userId);
         return componentClient.forValueEntity(GroupingName.PER_AGEGROUP.value, ageGroup.value)
                 .call(SingleLevelGroupingEntity::registerMovement)
-                .params(GroupingName.PER_AGEGROUP.value, ageGroup.value, new RegisterStatusMovementCommand(status, movement));
+                .params(GroupingName.PER_AGEGROUP.value, ageGroup.value, new RegisterStatusMovementCommand(status, movement))
+                .execute();
 
     }
 
-    private DeferredCall<Any, String> groupByGenderAndCountry(DemographicMovement event) {
+    private CompletionStage<String> groupByGenderAndCountry(DemographicMovement event) {
         String genderCountryId = GroupingName.dualGroupingKey(event.demographic().gender(), event.demographic().country());
         logger.info("grouping {} for gender/Country {}", event.status(), genderCountryId);
         return componentClient.forValueEntity(GroupingName.PER_GENDER.value, GroupingName.PER_COUNTRY.value, genderCountryId)
                 .call(DualLevelGroupingEntity::registerMovement)
-                .params(GroupingName.PER_GENDER.value, GroupingName.PER_COUNTRY.value, genderCountryId, new RegisterStatusMovementCommand(event.status(), event.movement()));
+                .params(GroupingName.PER_GENDER.value, GroupingName.PER_COUNTRY.value, genderCountryId, new RegisterStatusMovementCommand(event.status(), event.movement()))
+                .execute();
 
     }
 
-    private DeferredCall<Any, String> scheduleBirthdayAction(String userId, LocalDate birthDate) {
+    private CompletionStage<String> scheduleBirthdayAction(String userId, LocalDate birthDate) {
         return componentClient.forAction()
                 .call(AgeGroupMovementAction::scheduleBirthdayAction)
-                .params(userId, birthDate);
+                .params(userId, birthDate)
+                .execute();
     }
 
 }
