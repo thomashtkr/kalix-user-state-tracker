@@ -48,13 +48,15 @@ mvn kalix:run
 curl -v -X POST  http://localhost:9000/api/simulate/users/10
 
 #single level views
-curl -v http://localhost:9001/view/counters/peryear
-curl -v http://localhost:9001/view/counters/permonth
-curl -v http://localhost:9001/view/counters/perquarter
-curl -v http://localhost:9001/view/counters/peragegroup
+curl -v http://localhost:9001/view/single/counters/peryear
+curl -v http://localhost:9001/view/single/counters/peryear/2023
+curl -v http://localhost:9001/view/single/counters/permonth
+curl -v http://localhost:9001/view/single/counters/perquarter
+curl -v http://localhost:9001/view/single/counters/peragegroup
 
 #dual level view
-curl -v http://localhost:9001/view/counters/pergender/percountry
+curl -v http://localhost:9001/view/dual/counters/pergender/percountry
+curl -v http://localhost:9001/view/dual/counters/pergender/percountry/M_BE
 
 
 ```

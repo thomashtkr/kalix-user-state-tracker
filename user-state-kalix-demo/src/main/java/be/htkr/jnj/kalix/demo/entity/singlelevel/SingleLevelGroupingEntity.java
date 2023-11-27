@@ -15,7 +15,6 @@ import java.util.HashMap;
 
 @TypeId("single-level-grouped-status")
 @Id({"groupName", "groupId"})
-@RequestMapping("/group")
 public class SingleLevelGroupingEntity extends ValueEntity<SingleLevelGroupedCounters> {
 
     private final Logger logger = LoggerFactory.getLogger(SingleLevelGroupingEntity.class);
@@ -24,7 +23,7 @@ public class SingleLevelGroupingEntity extends ValueEntity<SingleLevelGroupedCou
     public SingleLevelGroupedCounters emptyState() { return new SingleLevelGroupedCounters(null, null, new HashMap<>()); }
 
 
-    @PostMapping("/{groupName}/{groupId}/register-movement")
+    @PostMapping("/group/{groupName}/{groupId}/register-movement")
     public Effect<String> registerMovement(@PathVariable("groupName") String groupName, @PathVariable("groupId") String groupId,
                                            @RequestBody RegisterStatusMovementCommand command) {
         logger.info("movement {} for groupName {} groupId {}",command.movement(), groupName, groupId);
@@ -37,7 +36,7 @@ public class SingleLevelGroupingEntity extends ValueEntity<SingleLevelGroupedCou
                 .thenReply("OK");
     }
 
-    @GetMapping("/{groupName}/{groupId}")
+    @GetMapping("/view/single/counters/{groupName}/{groupId}")
     public Effect<SingleLevelGroupedCounters> getCurrentState() {
         return effects().reply(currentState());
     }

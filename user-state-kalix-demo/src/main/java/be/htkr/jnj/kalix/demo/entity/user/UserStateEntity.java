@@ -38,35 +38,12 @@ public class UserStateEntity extends EventSourcedEntity<UserState, UserEntityEve
         logger.info("updateState with {}", command.event() );
         var diffs = differencesWithCurrentState(currentState(), command, commandContext().entityId());
         logger.info("found {} differences ", diffs.size());
-        diffs.forEach(d -> logger.info("difference  " + d));
         if(diffs.isEmpty()){
             return effects().reply(currentState().currentStatus());
         } else {
             return effects().emitEvents(diffs)
                     .thenReply(UserState::currentStatus);
         }
-
-        /*
-        if(currentDemographic != null && !Objects.equals(currentState().currentDemographic().ageGroup(), currentDemographic.ageGroup())) {
-
-        }
-        UserState.Status newStatus = getStatusFromBusinessEvent(command.event());
-        if(! Objects.equals(newStatus, currentState().currentStatus() )) {
-            List<UserEntityEvent> movements = new ArrayList<>();
-            //+1 for the new status
-            movements.add(new UserStatusMovement.UserStatusIncrement(commandContext().entityId(), newStatus, now));
-            if(currentState().currentStatus() != null) {
-                //-1 for the previousStatus status
-                movements.add(new UserStatusMovement.UserStatusDecrement(commandContext().entityId(), currentState().currentStatus(), now));
-            }
-            return effects().emitEvents(movements)
-                    .thenReply(UserState::currentStatus);
-        } else {
-            //deduplication. Commands (based of a topic) can be delivered multiple times
-            return effects().reply(currentState().currentStatus());
-        }
-
-         */
 
     }
 
@@ -79,10 +56,10 @@ public class UserStateEntity extends EventSourcedEntity<UserState, UserEntityEve
 
         if( !Objects.equals(newStatus, currentState.currentStatus() )) {
             List<UserEntityEvent> statusMovements = new ArrayList<>();
-            //+1 for the new status
+            //+1 for the new status with the current demographic
             statusMovements.add(new UserStatusMovement.UserStatusIncrement(entityId, newStatus, currentDemographic, now));
             if(currentState.currentStatus() != null) {
-                //-1 for the previousStatus status
+                //-1 for the previousStatus status with the current demographic
                 statusMovements.add(new UserStatusMovement.UserStatusDecrement(entityId, currentState.currentStatus(), currentDemographic, now));
             }
             diffs.addAll(statusMovements);
@@ -95,8 +72,10 @@ public class UserStateEntity extends EventSourcedEntity<UserState, UserEntityEve
             if(!Objects.equals(newDemographic, currentDemographic)) {
                 var currentAgeGroup = currentDemographic.ageGroup();
                 if(!Objects.equals(currentAgeGroup, newDemographic.ageGroup())){
+                    //+1 for the newDemographic (with the new status: the status is already updated when this event is processed)
                     movements.add(new DemographicMovement.DemographicIncrement(entityId, newStatus, Instant.now(), newDemographic));
                     if(currentAgeGroup != null){
+                        //-1 for the previousDemographic (with the new status: the status is already updated when this event is processed)
                         movements.add(new DemographicMovement.DemographicDecrement(entityId, newStatus, Instant.now(), currentDemographic));
                     }
                 }
@@ -104,7 +83,6 @@ public class UserStateEntity extends EventSourcedEntity<UserState, UserEntityEve
             return movements;
         }).orElse(List.of());
         diffs.addAll(demographicMovements);
-
 
         return diffs;
     }

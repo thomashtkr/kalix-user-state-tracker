@@ -37,19 +37,6 @@ public class MovementDispatcher extends Action {
         this.componentClient = componentClient;
     }
 
-    //eventHandler
-    /*
-    public Effect<String> dispatchEvent(UserEntityEvent event) {
-        return switch (event) {
-            case UserStatusMovement.UserStatusIncrement d -> dispatchStatusEvent(d);
-            case UserStatusMovement.UserStatusDecrement i -> dispatchStatusEvent(i);
-            case DemographicMovement.DemographicIncrement i -> dispatchDemographicMovement(i);
-            case DemographicMovement.DemographicDecrement d -> dispatchDemographicMovement(d);
-            default -> throw new IllegalArgumentException(String.format("unknown event received %s", event.getClass().getName()));
-        };
-    }
-
-     */
 
     public Effect<String> dispatchEvent(UserStatusMovement.UserStatusIncrement event) {
         return dispatchStatusMovement(event);
@@ -65,8 +52,6 @@ public class MovementDispatcher extends Action {
         return dispatchDemographicMovement(event);
     }
 
-
-
     private Effect<String> dispatchStatusMovement(UserStatusMovement event) {
         List<SideEffect> allEffects = new ArrayList<>(List.of(
                 SideEffect.of(groupByPeriod(event, PER_YEAR), true),
@@ -74,19 +59,14 @@ public class MovementDispatcher extends Action {
                 SideEffect.of(groupByPeriod(event, PER_QUARTER), true)));
 
         event.getAgeGroup().ifPresent(ageGroup -> {
+            //if there is an agegroup, we need to dispatch the statusMovement to that ageGroup
             allEffects.add(SideEffect.of(groupByAgeGroup(event.userId(), ageGroup, event.status(), event.movement()), true));
         });
 
         return effects().reply("OK")
                 .addSideEffect(allEffects.toArray(new SideEffect[0]));
     }
-/*
-    private AgeGroup getAgeGroupFromEvent(UserEntityEvent event) {
-        return Optional.ofNullable(event.demographic()).map(UserDemographic::ageGroup).orElseThrow();
-    }
 
-
- */
     //eventHandler
     private Effect<String> dispatchDemographicMovement(DemographicMovement event) {
         logger.info("dispatchDemographicMovement {} movement {}", event.demographic(), event.movement());
@@ -104,7 +84,6 @@ public class MovementDispatcher extends Action {
         if(event.demographic() != null){
             allEffects.add(SideEffect.of(groupByGenderAndCountry(event)));
         }
-
 
         return effects()
                 .reply("OK")
@@ -141,14 +120,10 @@ public class MovementDispatcher extends Action {
 
     }
 
-
     private DeferredCall<Any, String> scheduleBirthdayAction(String userId, LocalDate birthDate) {
         return componentClient.forAction()
                 .call(AgeGroupMovementAction::scheduleBirthdayAction)
                 .params(userId, birthDate);
     }
-
-
-
 
 }

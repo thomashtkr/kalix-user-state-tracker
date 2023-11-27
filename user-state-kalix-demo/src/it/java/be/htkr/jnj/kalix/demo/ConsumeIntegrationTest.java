@@ -161,21 +161,21 @@ public class ConsumeIntegrationTest extends KalixIntegrationTestKitSupport {
     }
 
     private Collection<SingleLevelGroupedViewData> getViewDataFor(GroupingName periodName) {
-        return webClient.get().uri("/view/counters/{groupName}", Map.of("groupName", periodName.value))
+        return webClient.get().uri("/view/single/counters/{groupName}", Map.of("groupName", periodName.value))
                 .retrieve().bodyToMono(SingleLevelGroupViewResponse.class).block().data();
     }
 
     private SingleLevelGroupedCounters getEntityDataFor(GroupingName groupingName, String groupId) {
-        return webClient.get().uri("/group/{groupName}/{groupId}", Map.of("groupName", groupingName.value, "groupId", groupId))
+        return webClient.get().uri("/view/single/counters/{groupName}/{groupId}", Map.of("groupName", groupingName.value, "groupId", groupId))
                 .retrieve().bodyToMono(SingleLevelGroupedCounters.class).block();
     }
 
     private DualLevelGroupedCounters getEntityDataFor(GroupingName group1, GroupingName group2, String groupId) {
-        return webClient.get().uri("/group/{group1}/{group2}/{groupId}", Map.of("group1", group1.value, "group2", group2.value, "groupId", groupId))
+        return webClient.get().uri("/view/dual/counters/{group1}/{group2}/{groupId}", Map.of("group1", group1.value, "group2", group2.value, "groupId", groupId))
                 .retrieve().bodyToMono(DualLevelGroupedCounters.class).block();
     }
     private Collection<DualLevelGroupedViewData> getViewDataFor(GroupingName group1, GroupingName group2) {
-        return webClient.get().uri("/view/counters/{groupName1}/{groupName2}", Map.of("groupName1", group1.value, "groupName2", group2.value))
+        return webClient.get().uri("/view/dual/counters/{groupName1}/{groupName2}", Map.of("groupName1", group1.value, "groupName2", group2.value))
                 .retrieve().bodyToMono(DualLevelGroupViewResponse.class).block().data();
     }
 }

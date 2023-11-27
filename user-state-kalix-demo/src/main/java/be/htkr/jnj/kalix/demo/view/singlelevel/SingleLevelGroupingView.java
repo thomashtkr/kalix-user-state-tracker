@@ -32,7 +32,7 @@ public class SingleLevelGroupingView extends View<SingleLevelGroupedViewData> {
     }
 
 
-    @GetMapping("/view/counters/{groupName}")
+    @GetMapping("/view/single/counters/{groupName}")
     @Query("SELECT * as data FROM single_level_grouped WHERE groupName = :groupName" )
     public SingleLevelGroupViewResponse getStatusPerGroup(@PathVariable("groupName") String groupName) {
         return null;
