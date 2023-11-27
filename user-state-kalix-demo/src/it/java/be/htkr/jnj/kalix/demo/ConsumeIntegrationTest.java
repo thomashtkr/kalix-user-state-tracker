@@ -1,5 +1,7 @@
 package be.htkr.jnj.kalix.demo;
 
+import be.htkr.jnj.kalix.demo.entity.dualevel.DualLevelGroupedCounters;
+import be.htkr.jnj.kalix.demo.entity.singlelevel.SingleLevelGroupedCounters;
 import be.htkr.jnj.kalix.demo.entity.user.AgeGroup;
 import be.htkr.jnj.kalix.demo.entity.user.UserState;
 import be.htkr.jnj.kalix.demo.events.UserBusinessEvent;
@@ -93,6 +95,11 @@ public class ConsumeIntegrationTest extends KalixIntegrationTestKitSupport {
 
         Collection<SingleLevelGroupedViewData> perYearResponse = getViewDataFor(PER_YEAR);
         verifyPerPeriod(perYearResponse, PER_YEAR, currentYear);
+        SingleLevelGroupedCounters yearCounters = getEntityDataFor(PER_YEAR, currentYear);
+        System.out.println("entityResponse " + yearCounters);
+        assertThat(yearCounters.groupId()).isEqualTo(currentYear);
+        assertThat(yearCounters.counters()).satisfies(counters -> assertThat(counters.get(UserState.Status.PROFILE_COMPLETE)).isEqualTo(1));
+        assertThat(yearCounters.counters()).satisfies(counters -> assertThat(counters.get(UserState.Status.REGISTERED)).isEqualTo(0));
 
         String currentMonth = GroupingName.timeStampToPeriodId(now, PER_MONTH);
         Collection<SingleLevelGroupedViewData> perMonthResponse = getViewDataFor(PER_MONTH);
@@ -117,6 +124,14 @@ public class ConsumeIntegrationTest extends KalixIntegrationTestKitSupport {
         assertThat(perCG.groupId()).isEqualTo("M_BE");
         assertThat(perCG.counters()).hasSize(1);
         assertThat(perCG.counters().stream().filter(c -> c.status().equals("PROFILE_COMPLETE")).count()).isEqualTo(1);
+        var dualGroupEntityCounters = getEntityDataFor(PER_GENDER, PER_COUNTRY, "M_BE");
+        assertThat(dualGroupEntityCounters.groupName1()).isEqualTo(PER_GENDER.value);
+        assertThat(dualGroupEntityCounters.groupName2()).isEqualTo(PER_COUNTRY.value);
+        assertThat(dualGroupEntityCounters.groupId()).isEqualTo("M_BE");
+        assertThat(dualGroupEntityCounters.counters()).hasSize(1);
+        assertThat(dualGroupEntityCounters.counters()).satisfies(m -> assertThat(m.get(UserState.Status.PROFILE_COMPLETE)).isEqualTo(1));
+
+
 //move ageGroup
         eventsTopic.publish(new UserBusinessEvent.UserProfileCompleted(userId, new UserDetails("blue", "BE", "M", birthDate.minusYears(20)), Instant.now()), topicId);
         Thread.sleep(5000);
@@ -132,6 +147,8 @@ public class ConsumeIntegrationTest extends KalixIntegrationTestKitSupport {
         assertThat(perGroup.groupId()).isEqualTo(AgeGroup._19_25.value);
         assertThat(perGroup.counters().get(0).count()).isEqualTo(1);
         assertThat(perGroup.counters().stream().filter(c -> c.status().equals("PROFILE_COMPLETE")).count()).isEqualTo(1);
+
+
     }
 
     private void verifyPerPeriod(Collection<SingleLevelGroupedViewData> groupedData, GroupingName periodName, String periodId) {
@@ -146,6 +163,16 @@ public class ConsumeIntegrationTest extends KalixIntegrationTestKitSupport {
     private Collection<SingleLevelGroupedViewData> getViewDataFor(GroupingName periodName) {
         return webClient.get().uri("/view/counters/{groupName}", Map.of("groupName", periodName.value))
                 .retrieve().bodyToMono(SingleLevelGroupViewResponse.class).block().data();
+    }
+
+    private SingleLevelGroupedCounters getEntityDataFor(GroupingName groupingName, String groupId) {
+        return webClient.get().uri("/group/{groupName}/{groupId}", Map.of("groupName", groupingName.value, "groupId", groupId))
+                .retrieve().bodyToMono(SingleLevelGroupedCounters.class).block();
+    }
+
+    private DualLevelGroupedCounters getEntityDataFor(GroupingName group1, GroupingName group2, String groupId) {
+        return webClient.get().uri("/group/{group1}/{group2}/{groupId}", Map.of("group1", group1.value, "group2", group2.value, "groupId", groupId))
+                .retrieve().bodyToMono(DualLevelGroupedCounters.class).block();
     }
     private Collection<DualLevelGroupedViewData> getViewDataFor(GroupingName group1, GroupingName group2) {
         return webClient.get().uri("/view/counters/{groupName1}/{groupName2}", Map.of("groupName1", group1.value, "groupName2", group2.value))

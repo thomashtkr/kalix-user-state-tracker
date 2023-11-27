@@ -5,6 +5,7 @@ import kalix.javasdk.annotations.TypeId;
 import kalix.javasdk.valueentity.ValueEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -34,6 +35,11 @@ public class SingleLevelGroupingEntity extends ValueEntity<SingleLevelGroupedCou
         return effects()
                 .updateState(state.count(command.status(), command.movement()))
                 .thenReply("OK");
+    }
+
+    @GetMapping("/{groupName}/{groupId}")
+    public Effect<SingleLevelGroupedCounters> getCurrentState() {
+        return effects().reply(currentState());
     }
 
 }
