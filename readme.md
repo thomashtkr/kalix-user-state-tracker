@@ -54,6 +54,9 @@ curl -v http://localhost:9000/view/single/counters/permonth
 curl -v http://localhost:9000/view/single/counters/perquarter
 curl -v http://localhost:9000/view/single/counters/peragegroup
 
+#all users
+curl -v http://localhost:9000/view/users
+
 #dual level view
 curl -v http://localhost:9000/view/dual/counters/pergender/percountry
 curl -v http://localhost:9000/view/dual/counters/pergender/percountry/M_BE

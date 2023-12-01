@@ -34,7 +34,7 @@ public class AgeGroupMovementAction extends Action {
         var today = LocalDate.now();
         logger.info("scheduling updateAgeGroup for user {} with {}", userId, birthDate);
         var birthDay = getNextBirthDay(today, birthDate);
-        var daysToBirthDay = ChronoUnit.DAYS.between(today, birthDay);
+        var daysToBirthDay = Math.max(200, ChronoUnit.DAYS.between(today, birthDay));
         logger.info("scheduling updateAgeGroup in {} days for user {}", daysToBirthDay, userId);
         String birthdayTimerName = userId + "_birthday";
 
@@ -46,17 +46,16 @@ public class AgeGroupMovementAction extends Action {
 
         CompletionStage<String> scheduleNextTimer = cancellationPreviousTimer
                 .thenCompose(done -> {
-                    return timers().startSingleTimer(birthdayTimerName, Duration.ofDays(daysToBirthDay/2), triggerUpdateAgeGroup);
+                    return timers().startSingleTimer(birthdayTimerName, Duration.ofDays(daysToBirthDay), triggerUpdateAgeGroup);
                 })
                 .thenApply(done -> "Ok");
-
 
         return effects().asyncReply(scheduleNextTimer);
     }
 
     private LocalDate getNextBirthDay(LocalDate today, LocalDate born) {
         var next = born.withYear(today.getYear());
-        if(!next.isAfter(today)){
+        if(!next.isBefore(today) && !next.isEqual(today)){
             return next.plusYears(1);
         } else {
             return next;

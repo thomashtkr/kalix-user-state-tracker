@@ -73,7 +73,6 @@
                 <configuration>
                     <source>21</source>
                     <target>21</target>
-
                 </configuration>
             </plugin>
 
@@ -253,6 +252,11 @@
             <groupId>io.kalix</groupId>
             <artifactId>kalix-spring-boot-starter-test</artifactId>
             <version>${kalix-sdk.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
             <scope>test</scope>
         </dependency>
 

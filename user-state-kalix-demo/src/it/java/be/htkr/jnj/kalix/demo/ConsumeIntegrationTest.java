@@ -13,9 +13,13 @@ import be.htkr.jnj.kalix.demo.view.dual.DualLevelGroupViewResponse;
 import be.htkr.jnj.kalix.demo.view.dual.DualLevelGroupedViewData;
 import be.htkr.jnj.kalix.demo.view.singlelevel.SingleLevelGroupViewResponse;
 import be.htkr.jnj.kalix.demo.view.singlelevel.SingleLevelGroupedViewData;
+import be.htkr.jnj.kalix.demo.view.users.UserData;
+import be.htkr.jnj.kalix.demo.view.users.UserDataResponse;
 import kalix.javasdk.testkit.EventingTestKit;
 import kalix.javasdk.testkit.KalixTestKit;
 import kalix.spring.testkit.KalixIntegrationTestKitSupport;
+import org.awaitility.Awaitility;
+import org.awaitility.Duration;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,13 +30,13 @@ import org.springframework.context.annotation.Import;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.IOException;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import static be.htkr.jnj.kalix.demo.DemoConfig.STATUS_MOVEMENT_STREAM;
 import static be.htkr.jnj.kalix.demo.view.GroupingName.PER_AGEGROUP;
@@ -42,6 +46,7 @@ import static be.htkr.jnj.kalix.demo.view.GroupingName.PER_MONTH;
 import static be.htkr.jnj.kalix.demo.view.GroupingName.PER_QUARTER;
 import static be.htkr.jnj.kalix.demo.view.GroupingName.PER_YEAR;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 @SpringBootTest(classes = Main.class)
 @ExtendWith(MockitoExtension.class)
@@ -62,6 +67,9 @@ public class ConsumeIntegrationTest extends KalixIntegrationTestKitSupport {
 
     @BeforeAll
     public void beforeAll() throws IOException {
+        Awaitility.setDefaultPollInterval(1, TimeUnit.SECONDS);
+        Awaitility.setDefaultPollDelay(Duration.ZERO);
+        Awaitility.setDefaultTimeout(Duration.ONE_MINUTE);
         eventsTopic = kalixTestKit.getTopicIncomingMessages(DemoConfig.USER_BUSINESS_EVENTS_TOPIC);
         movementsStream = kalixTestKit.getTopicOutgoingMessages(STATUS_MOVEMENT_STREAM);
     }
@@ -75,7 +83,7 @@ public class ConsumeIntegrationTest extends KalixIntegrationTestKitSupport {
         var registeredUser = new UserBusinessEvent.UserRegistered(userId, new User(userId, "name", "email"), Instant.now());
         eventsTopic.publish(registeredUser, topicId);
         eventsTopic.publish(new UserBusinessEvent.UserProfileCompleted(userId, new UserDetails("blue", "BE", "M", birthDate), Instant.now()), topicId);
-        UserStatusMovement reg = movementsStream.expectOneTyped(UserStatusMovement.class, Duration.of(5, ChronoUnit.SECONDS)).getPayload();
+        UserStatusMovement reg = movementsStream.expectOneTyped(UserStatusMovement.class, java.time.Duration.of(5, ChronoUnit.SECONDS)).getPayload();
         assertThat(reg.movement()).isEqualTo(1);
         assertThat(reg.status()).isEqualTo(UserState.Status.REGISTERED.name());
 
@@ -89,9 +97,11 @@ public class ConsumeIntegrationTest extends KalixIntegrationTestKitSupport {
 
         assertThat(movementsStream.clear()).isEmpty();
 
-        Thread.sleep(5000L);
+
         Instant now = Instant.now();
         String currentYear = GroupingName.timeStampToPeriodId(now, PER_YEAR);
+
+        await().until(() -> !getViewDataFor(PER_YEAR).isEmpty());
 
         Collection<SingleLevelGroupedViewData> perYearResponse = getViewDataFor(PER_YEAR);
         verifyPerPeriod(perYearResponse, PER_YEAR, currentYear);
@@ -135,7 +145,7 @@ public class ConsumeIntegrationTest extends KalixIntegrationTestKitSupport {
 
 //move ageGroup
         eventsTopic.publish(new UserBusinessEvent.UserProfileCompleted(userId, new UserDetails("blue", "BE", "M", birthDate.minusYears(20)), Instant.now()), topicId);
-        Thread.sleep(10000);
+        await().until(() -> getViewDataFor(PER_AGEGROUP).size() == 2);
         perAgeGroup = getViewDataFor(GroupingName.PER_AGEGROUP);
         System.out.println("perAgeGroup after agegroup move: " + perAgeGroup);
         assertThat(perAgeGroup).hasSize(2);
@@ -148,6 +158,10 @@ public class ConsumeIntegrationTest extends KalixIntegrationTestKitSupport {
         assertThat(perGroup.groupId()).isEqualTo(AgeGroup._19_25.value);
         assertThat(perGroup.counters().get(0).count()).isEqualTo(1);
         assertThat(perGroup.counters().stream().filter(c -> c.status().equals("PROFILE_COMPLETE")).count()).isEqualTo(1);
+
+        Collection<UserData> users = getUsers();
+        assertThat(users).hasSize(1);
+        assertThat(users.iterator().next().userId()).isEqualTo(userId);
 
 
     }
@@ -178,5 +192,10 @@ public class ConsumeIntegrationTest extends KalixIntegrationTestKitSupport {
     private Collection<DualLevelGroupedViewData> getViewDataFor(GroupingName group1, GroupingName group2) {
         return webClient.get().uri("/view/dual/counters/{groupName1}/{groupName2}", Map.of("groupName1", group1.value, "groupName2", group2.value))
                 .retrieve().bodyToMono(DualLevelGroupViewResponse.class).block().data();
+    }
+
+    private Collection<UserData> getUsers() {
+        return webClient.get().uri("/view/users")
+                .retrieve().bodyToMono(UserDataResponse.class).block().users();
     }
 }
