@@ -38,6 +38,7 @@ public class UserStateEntity extends EventSourcedEntity<UserState, UserEntityEve
         logger.info("updateState with {}", command.event() );
         var diffs = differencesWithCurrentState(currentState(), command, commandContext().entityId());
         logger.info("found {} differences ", diffs.size());
+        diffs.forEach(d -> logger.info("  " + d));
         if(diffs.isEmpty()){
             return effects().reply(currentState().currentStatus());
         } else {

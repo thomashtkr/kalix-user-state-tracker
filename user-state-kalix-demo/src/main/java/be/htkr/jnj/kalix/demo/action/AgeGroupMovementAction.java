@@ -1,5 +1,6 @@
 package be.htkr.jnj.kalix.demo.action;
 
+import akka.Done;
 import be.htkr.jnj.kalix.demo.entity.user.UpdateAgeGroupCommand;
 import be.htkr.jnj.kalix.demo.entity.user.UserState;
 import be.htkr.jnj.kalix.demo.entity.user.UserStateEntity;
@@ -31,16 +32,26 @@ public class AgeGroupMovementAction extends Action {
     @PostMapping("/internal/schedule/update-age-group/{userId}")
     public Effect<String> scheduleBirthdayAction(@PathVariable("userId") String userId, @RequestBody LocalDate birthDate) {
         var today = LocalDate.now();
+        logger.info("scheduling updateAgeGroup for user {} with {}", userId, birthDate);
         var birthDay = getNextBirthDay(today, birthDate);
         var daysToBirthDay = ChronoUnit.DAYS.between(today, birthDay);
         logger.info("scheduling updateAgeGroup in {} days for user {}", daysToBirthDay, userId);
         String birthdayTimerName = userId + "_birthday";
-        timers().cancel(birthdayTimerName);
-        DeferredCall<Any, String> triggerUpdateAgeGroup = componentClient.forAction()
+
+        CompletionStage<Done> cancellationPreviousTimer = timers().cancel(birthdayTimerName);
+
+        DeferredCall<Any,String> triggerUpdateAgeGroup = componentClient.forAction()
                 .call(AgeGroupMovementAction::triggerUpdateAgeGroup)
                 .params(userId, birthDate);
-        timers().startSingleTimer(birthdayTimerName, Duration.ofDays(daysToBirthDay), triggerUpdateAgeGroup);
-        return effects().reply("Ok");
+
+        CompletionStage<String> scheduleNextTimer = cancellationPreviousTimer
+                .thenCompose(done -> {
+                    return timers().startSingleTimer(birthdayTimerName, Duration.ofDays(daysToBirthDay/2), triggerUpdateAgeGroup);
+                })
+                .thenApply(done -> "Ok");
+
+
+        return effects().asyncReply(scheduleNextTimer);
     }
 
     private LocalDate getNextBirthDay(LocalDate today, LocalDate born) {
@@ -55,25 +66,19 @@ public class AgeGroupMovementAction extends Action {
     @PostMapping("/internal/trigger/update-age-group/{userId}")
     public Effect<String> triggerUpdateAgeGroup(@PathVariable("userId") String userId, @RequestBody LocalDate birthDate) {
         logger.info("triggering updateAgeGroup for user {}", userId);
-        DeferredCall<Any, UserState.Status> updateAgeGroup = componentClient.forEventSourcedEntity(userId)
+        CompletionStage<UserState.Status> updateAgeGroup = componentClient.forEventSourcedEntity(userId)
                 .call(UserStateEntity::updateAgeGroup)
-                .params(new UpdateAgeGroupCommand());
+                .params(new UpdateAgeGroupCommand())
+                .execute();
 
-        CompletionStage<String> reply =
-                updateAgeGroup
-                        .execute()
-                        .thenApply(currentStatus -> "Ok")
-                        .exceptionally(exception -> {
-                            logger.error("failed to updateAgeGroup on userEntity {} ", userId);
-                            return "Ok";
-                        })
-                        .thenApply(response -> {
-                            logger.info("scheduling next birthDayAction");
-                            scheduleBirthdayAction(userId, birthDate);
-                            return response;
-                        });
 
-        return effects().asyncReply(reply);
+        CompletionStage<String> scheduleNext = componentClient.forAction()
+                .call(AgeGroupMovementAction::scheduleBirthdayAction)
+                        .params(userId, birthDate).execute();
+
+        return effects()
+                .asyncReply(updateAgeGroup.thenCompose(done -> scheduleNext)
+                .thenApply(done -> "Ok"));
 
     }
 

@@ -52,7 +52,7 @@ public class MovementDispatcher extends Action {
     }
 
     private Effect<String> dispatchStatusMovement(UserStatusMovement event) {
-        List<CompletionStage<String>> groupByRequests = new ArrayList<>(List.of(
+        List<CompletionStage<String>> outboundRequests = new ArrayList<>(List.of(
                 groupByPeriod(event, PER_YEAR),
                 groupByPeriod(event, PER_MONTH),
                 groupByPeriod(event, PER_QUARTER))
@@ -60,10 +60,10 @@ public class MovementDispatcher extends Action {
 
         event.getAgeGroup().ifPresent(ageGroup -> {
             //if there is an agegroup, we need to dispatch the statusMovement to that ageGroup
-            groupByRequests.add(groupByAgeGroup(event.userId(), ageGroup, event.status(), event.movement()));
+            outboundRequests.add(groupByAgeGroup(event.userId(), ageGroup, event.status(), event.movement()));
         });
 
-        CompletableFuture<String> all = CompletableFuture.allOf(groupByRequests.toArray(new CompletableFuture[0]))
+        CompletableFuture<String> all = CompletableFuture.allOf(outboundRequests.toArray(new CompletableFuture[0]))
                 .thenApply(done -> "OK");
 
         return effects().asyncReply(all);
@@ -72,22 +72,22 @@ public class MovementDispatcher extends Action {
     //eventHandler
     private Effect<String> dispatchDemographicMovement(DemographicMovement event) {
         logger.info("dispatchDemographicMovement {} movement {}", event.demographic(), event.movement());
-        List<CompletionStage<String>> groupByRequests = new ArrayList<>();
+        List<CompletionStage<String>> outboundRequests = new ArrayList<>();
         event.getAgeGroup().ifPresent(ageGroup -> {
-            groupByRequests.add(groupByAgeGroup(event.userId(), ageGroup, event.status(), event.movement()));
+            outboundRequests.add(groupByAgeGroup(event.userId(), ageGroup, event.status(), event.movement()));
         });
 
         //when the birthdate was registered, we schedule a future birthday event
         if(event.status().equals(UserState.Status.PROFILE_COMPLETE) && event.demographic() != null) {
-            groupByRequests.add(scheduleBirthdayAction(event.userId(), event.demographic().birthDate()));
+            outboundRequests.add(scheduleBirthdayAction(event.userId(), event.demographic().birthDate()));
         }
 
         //group by gender and country
         if(event.demographic() != null){
-            groupByRequests.add(groupByGenderAndCountry(event));
+            outboundRequests.add(groupByGenderAndCountry(event));
         }
 
-        CompletableFuture<String> all = CompletableFuture.allOf(groupByRequests.toArray(new CompletableFuture[0]))
+        CompletableFuture<String> all = CompletableFuture.allOf(outboundRequests.toArray(new CompletableFuture[0]))
                 .thenApply(done -> "OK");
 
 

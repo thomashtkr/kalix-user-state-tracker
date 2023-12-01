@@ -110,6 +110,7 @@ public class ConsumeIntegrationTest extends KalixIntegrationTestKitSupport {
         verifyPerPeriod(perQuarterResponse, PER_QUARTER, currentQuarter);
 
         Collection<SingleLevelGroupedViewData> perAgeGroup = getViewDataFor(GroupingName.PER_AGEGROUP);
+        System.out.println("perAgeGroup before agegroup move: " + perAgeGroup);
         var perGroup = perAgeGroup.stream().toList().get(0);
         assertThat(perGroup.groupName()).isEqualTo(PER_AGEGROUP.value);
         assertThat(perGroup.groupId()).isEqualTo(AgeGroup.MINUS_18.value);
@@ -134,7 +135,7 @@ public class ConsumeIntegrationTest extends KalixIntegrationTestKitSupport {
 
 //move ageGroup
         eventsTopic.publish(new UserBusinessEvent.UserProfileCompleted(userId, new UserDetails("blue", "BE", "M", birthDate.minusYears(20)), Instant.now()), topicId);
-        Thread.sleep(5000);
+        Thread.sleep(10000);
         perAgeGroup = getViewDataFor(GroupingName.PER_AGEGROUP);
         System.out.println("perAgeGroup after agegroup move: " + perAgeGroup);
         assertThat(perAgeGroup).hasSize(2);
