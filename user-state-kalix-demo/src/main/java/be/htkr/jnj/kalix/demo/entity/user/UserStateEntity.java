@@ -50,22 +50,31 @@ public class UserStateEntity extends EventSourcedEntity<UserState, UserEntityEve
 
     private static List<UserEntityEvent> differencesWithCurrentState(UserState currentState, UpdateUserStateCommand command, String entityId) {
         final List<UserEntityEvent> diffs = new ArrayList<>();
-        Instant now = Instant.now();
+        diffs.addAll(getUserStateDifferences(entityId, currentState, command));
+        diffs.addAll(getDemographicDifferences(entityId, currentState, command));
+        return diffs;
+    }
+    private static List<UserEntityEvent> getUserStateDifferences(String entityId, UserState currentState, UpdateUserStateCommand command) {
         UserState.Status newStatus = getStatusFromBusinessEvent(command.event());
-
         UserDemographic currentDemographic = currentState.currentDemographic();
-
         if( !Objects.equals(newStatus, currentState.currentStatus() )) {
             List<UserEntityEvent> statusMovements = new ArrayList<>();
             //+1 for the new status with the current demographic
-            statusMovements.add(new UserStatusMovement.UserStatusIncrement(entityId, newStatus, currentDemographic, now));
+            statusMovements.add(new UserStatusMovement.UserStatusIncrement(entityId, newStatus, currentDemographic, Instant.now()));
             if(currentState.currentStatus() != null) {
                 //-1 for the previousStatus status with the current demographic
-                statusMovements.add(new UserStatusMovement.UserStatusDecrement(entityId, currentState.currentStatus(), currentDemographic, now));
+                statusMovements.add(new UserStatusMovement.UserStatusDecrement(entityId, currentState.currentStatus(), currentDemographic, Instant.now()));
             }
-            diffs.addAll(statusMovements);
+            return statusMovements;
         }
-        List<UserEntityEvent> demographicMovements = command.getDemographic().map(newDemographic -> {
+        return List.of();
+    }
+
+    private static List<UserEntityEvent> getDemographicDifferences(String entityId, UserState currentState, UpdateUserStateCommand command) {
+        UserState.Status newStatus = getStatusFromBusinessEvent(command.event());
+        UserDemographic currentDemographic = currentState.currentDemographic();
+
+        return command.getDemographic().map(newDemographic -> {
             List<UserEntityEvent> movements = new ArrayList<>();
 
             //every updated demographic should result in a separate event.
@@ -83,10 +92,8 @@ public class UserStateEntity extends EventSourcedEntity<UserState, UserEntityEve
             }
             return movements;
         }).orElse(List.of());
-        diffs.addAll(demographicMovements);
-
-        return diffs;
     }
+
 
 
 
@@ -102,18 +109,7 @@ public class UserStateEntity extends EventSourcedEntity<UserState, UserEntityEve
 
     @EventHandler
     public UserState on(UserStatusMovement.UserStatusIncrement increment) {
-        logger.info("updating state with " + increment);
-        var current =  currentState().updateStatus(increment.status(), increment.timestamp());
-        logger.info("current" + current);
-        return current;
-        /*
-        if(increment.currentDemographic() != null){
-            return newState.updateDemographic(increment.currentDemographic().favoriteColor(), increment.currentDemographic().country(), increment.currentDemographic().gender(), increment.currentDemographic().birthDate(), increment.currentDemographic().ageGroup())     ;
-        } else {
-            return newState;
-        }
-
-         */
+        return currentState().updateStatus(increment.status(), increment.timestamp());
     }
 
     @EventHandler
@@ -142,11 +138,8 @@ public class UserStateEntity extends EventSourcedEntity<UserState, UserEntityEve
 
     @EventHandler
     public UserState on(DemographicMovement.DemographicIncrement increment) {
-        logger.info("updating state with " + increment);
         UserDemographic demographic = increment.demographic();
-        var current =   currentState().updateDemographic(demographic);
-        logger.info("current" + current);
-        return current;
+        return currentState().updateDemographic(demographic);
     }
 
     @EventHandler
