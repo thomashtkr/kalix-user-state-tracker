@@ -10,7 +10,7 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class StatusPerPeriodTest {
+public class SingleLevelGroupingTest {
 
     @Test
     void testInitialState() {
@@ -44,6 +44,19 @@ public class StatusPerPeriodTest {
         assertThat(state.counters().get(UserState.Status.EMAIL_VERIFIED)).isEqualTo(10);
         assertThat(state.counters().get(UserState.Status.GDPR_CONFIRMED)).isEqualTo(0);
         assertThat(state.counters().entrySet()).hasSize(3);
+
+        state.count(UserState.Status.EMAIL_VERIFIED, -1);
+        assertThat(state.counters().get(UserState.Status.REGISTERED)).isEqualTo(0);
+        assertThat(state.counters().get(UserState.Status.EMAIL_VERIFIED)).isEqualTo(9);
+        assertThat(state.counters().get(UserState.Status.GDPR_CONFIRMED)).isEqualTo(0);
+        assertThat(state.counters().entrySet()).hasSize(3);
+
+        state.count(UserState.Status.EMAIL_VERIFIED, -1);
+        assertThat(state.counters().get(UserState.Status.REGISTERED)).isEqualTo(0);
+        assertThat(state.counters().get(UserState.Status.EMAIL_VERIFIED)).isEqualTo(8);
+        assertThat(state.counters().get(UserState.Status.GDPR_CONFIRMED)).isEqualTo(0);
+        assertThat(state.counters().entrySet()).hasSize(3);
+
     }
 
     @Test
@@ -57,6 +70,13 @@ public class StatusPerPeriodTest {
             assertThat(testKit.getState().counters()).containsExactlyEntriesOf(Map.of(UserState.Status.REGISTERED, 1));
             assertThat(testKit.getState().groupName()).isEqualTo(GroupingName.PER_YEAR.value);
             assertThat(testKit.getState().groupId()).isEqualTo("2023");
+
+            var counters = testKit.call(SingleLevelGroupingEntity::getCurrentState).getReply();
+            assertThat(counters.groupId()).isEqualTo("2023");
+            assertThat(counters.groupName()).isEqualTo(GroupingName.PER_YEAR.value);
+            assertThat(counters.counters().get(UserState.Status.REGISTERED)).isEqualTo(1);
+            assertThat(counters.counters()).containsExactlyEntriesOf(Map.of(UserState.Status.REGISTERED, 1));
+
         }
     }
 

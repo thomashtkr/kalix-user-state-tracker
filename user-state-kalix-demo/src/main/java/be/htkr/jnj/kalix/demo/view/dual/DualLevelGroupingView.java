@@ -40,7 +40,7 @@ public class DualLevelGroupingView extends View<DualLevelGroupedViewData> {
                 .map(e -> new StatusCounter(e.getKey().name(), e.getValue())).collect(Collectors.toList());
     }
 
-    @GetMapping("/view/counters/{group1}/{group2}")
+    @GetMapping("/view/dual/counters/{group1}/{group2}")
     @Query("SELECT * as data FROM dual_level_grouped WHERE group1 = :group1 and group2 = :group2" )
     public DualLevelGroupViewResponse getStatusPerGroup(@PathVariable("group1") String group1, @PathVariable("group2") String group2) {
         return null;

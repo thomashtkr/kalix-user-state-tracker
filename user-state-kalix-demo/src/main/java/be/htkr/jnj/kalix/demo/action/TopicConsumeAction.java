@@ -26,7 +26,7 @@ public class TopicConsumeAction extends Action {
     public Effect<UserState.Status> onBusinessEvent(UserBusinessEvent event) {
         logger.info("received event from topic {}", event);
 
-        var forwardToEntity = componentClient.forEventSourcedEntity(event.userId()).call(UserStateEntity::updateStatus)
+        var forwardToEntity = componentClient.forEventSourcedEntity(event.userId()).call(UserStateEntity::updateUserState)
                 .params(new UpdateUserStateCommand(event));
 
         return effects().forward(forwardToEntity);

@@ -7,6 +7,7 @@ import kalix.javasdk.annotations.TypeId;
 import kalix.javasdk.valueentity.ValueEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,7 +17,6 @@ import java.util.HashMap;
 
 @TypeId("dual-level-grouped-status")
 @Id({"group1", "group2", "groupId"})
-@RequestMapping("/group")
 public class DualLevelGroupingEntity extends ValueEntity<DualLevelGroupedCounters> {
 
     private final Logger logger = LoggerFactory.getLogger(DualLevelGroupingEntity.class);
@@ -26,7 +26,7 @@ public class DualLevelGroupingEntity extends ValueEntity<DualLevelGroupedCounter
         return new DualLevelGroupedCounters(null, null, null, new HashMap<>());
     }
 
-    @PostMapping("/{group1}/{group2}/{groupId}/register-movement")
+    @PostMapping("/group/{group1}/{group2}/{groupId}/register-movement")
     public Effect<String> registerMovement(@PathVariable("group1") String group1,
                                            @PathVariable("group2") String group2,
                                            @PathVariable("groupId") String groupId,
@@ -40,5 +40,10 @@ public class DualLevelGroupingEntity extends ValueEntity<DualLevelGroupedCounter
         return effects()
                 .updateState(state.count(command.status(), command.movement()))
                 .thenReply("OK");
+    }
+
+    @GetMapping("/view/dual/counters/{group1}/{group2}/{groupId}")
+    public Effect<DualLevelGroupedCounters> getCurrentState() {
+        return effects().reply(currentState());
     }
 }
