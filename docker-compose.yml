@@ -18,7 +18,7 @@ services:
     environment:
       HOST: event-simulation
   kalix-proxy-event-simulation:
-    image: gcr.io/kalix-public/kalix-proxy:1.1.23
+    image: gcr.io/kalix-public/kalix-proxy:1.1.29
     depends_on:
       - gcloud-pubsub-emulator
       - event-simulation
@@ -36,7 +36,7 @@ services:
       PUBSUB_EMULATOR_HOST: gcloud-pubsub-emulator
       ACL_ENABLED: "false"
   kalix-proxy:
-    image: gcr.io/kalix-public/kalix-proxy:1.1.23
+    image: gcr.io/kalix-public/kalix-proxy:1.1.29
     depends_on:
       - gcloud-pubsub-emulator
     ports:
