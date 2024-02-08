@@ -13,8 +13,8 @@
 
     <name>jnj-kalix demo application</name>
     <properties>
-        <kalix-sdk.version>1.3.5</kalix-sdk.version>
-        <kalix-maven-plugin-version>1.3.5</kalix-maven-plugin-version>
+        <kalix-sdk.version>1.3.8</kalix-sdk.version>
+        <kalix-maven-plugin-version>1.3.8</kalix-maven-plugin-version>
     </properties>
     
     <dependencyManagement>
